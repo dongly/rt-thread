@@ -2,10 +2,6 @@
  * Copyright (c) 2006-2018, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
- */
-
-/*
- * File      : init.c
  *
  * Change Logs:
  * Date           Author       Notes
@@ -18,6 +14,7 @@
  * 2015-05-04     Bernard      Rename it to components.c because compiling issue
  *                             in some IDEs.
  * 2015-07-29     Arda.Fu      Add support to use RT_USING_USER_MAIN with IAR
+ * 2018-11-22     Jesven       Add secondary cpu boot up
  */
 
 #include <rthw.h>
@@ -48,7 +45,7 @@
  *
  * rti_end           --> 6.end
  *
- * These automatically initializaiton, the driver or component initial function must
+ * These automatically initialization, the driver or component initial function must
  * be defined with:
  * INIT_BOARD_EXPORT(fn);
  * INIT_DEVICE_EXPORT(fn);
@@ -113,7 +110,7 @@ void rt_components_init(void)
     int result;
     const struct rt_init_desc *desc;
 
-    rt_kprintf("do components intialization.\n");
+    rt_kprintf("do components initialization.\n");
     for (desc = &__rt_init_desc_rti_board_end; desc < &__rt_init_desc_rti_end; desc ++)
     {
         rt_kprintf("initialize %s", desc->fn_name);
@@ -136,7 +133,7 @@ void rt_application_init(void);
 void rt_hw_board_init(void);
 int rtthread_startup(void);
 
-#if defined (__CC_ARM)
+#if defined(__CC_ARM) || defined(__CLANG_ARM)
 extern int $Super$$main(void);
 /* re-define main function */
 int $Sub$$main(void)
@@ -184,8 +181,11 @@ void main_thread_entry(void *parameter)
     /* RT-Thread components initialization */
     rt_components_init();
 
+#ifdef RT_USING_SMP
+    rt_hw_secondary_cpu_up();
+#endif
     /* invoke system main function */
-#if defined (__CC_ARM)
+#if defined(__CC_ARM) || defined(__CLANG_ARM)
     $Super$$main(); /* for ARMCC. */
 #elif defined(__ICCARM__) || defined(__GNUC__)
     main();
@@ -219,7 +219,7 @@ int rtthread_startup(void)
 {
     rt_hw_interrupt_disable();
 
-    /* board level initalization
+    /* board level initialization
      * NOTE: please initialize heap inside board initialization.
      */
     rt_hw_board_init();
@@ -246,6 +246,10 @@ int rtthread_startup(void)
 
     /* idle thread initialization */
     rt_thread_idle_init();
+
+#ifdef RT_USING_SMP
+    rt_hw_spin_lock(&_cpus_lock);
+#endif /*RT_USING_SMP*/
 
     /* start scheduler */
     rt_system_scheduler_start();

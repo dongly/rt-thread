@@ -2,10 +2,6 @@
  * Copyright (c) 2006-2018, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
- */
-
-/*
- * File      : timer.c
  *
  * Change Logs:
  * Date           Author       Notes
@@ -47,7 +43,8 @@ static rt_uint8_t timer_thread_stack[RT_TIMER_THREAD_STACK_SIZE];
 #ifdef RT_USING_HOOK
 extern void (*rt_object_take_hook)(struct rt_object *object);
 extern void (*rt_object_put_hook)(struct rt_object *object);
-static void (*rt_timer_timeout_hook)(struct rt_timer *timer);
+static void (*rt_timer_enter_hook)(struct rt_timer *timer);
+static void (*rt_timer_exit_hook)(struct rt_timer *timer);
 
 /**
  * @addtogroup Hook
@@ -56,14 +53,25 @@ static void (*rt_timer_timeout_hook)(struct rt_timer *timer);
 /**@{*/
 
 /**
- * This function will set a hook function, which will be invoked when timer
- * is timeout.
+ * This function will set a hook function, which will be invoked when enter
+ * timer timeout callback function.
  *
  * @param hook the hook function
  */
-void rt_timer_timeout_sethook(void (*hook)(struct rt_timer *timer))
+void rt_timer_enter_sethook(void (*hook)(struct rt_timer *timer))
 {
-    rt_timer_timeout_hook = hook;
+    rt_timer_enter_hook = hook;
+}
+
+/**
+ * This function will set a hook function, which will be invoked when exit
+ * timer timeout callback function.
+ *
+ * @param hook the hook function
+ */
+void rt_timer_exit_sethook(void (*hook)(struct rt_timer *timer))
+{
+    rt_timer_exit_hook = hook;
 }
 
 /**@}*/
@@ -507,7 +515,7 @@ void rt_timer_check(void)
          */
         if ((current_tick - t->timeout_tick) < RT_TICK_MAX / 2)
         {
-            RT_OBJECT_HOOK_CALL(rt_timer_timeout_hook, (t));
+            RT_OBJECT_HOOK_CALL(rt_timer_enter_hook, (t));
 
             /* remove timer from timer list firstly */
             _rt_timer_remove(t);
@@ -518,6 +526,7 @@ void rt_timer_check(void)
             /* re-get tick */
             current_tick = rt_tick_get();
 
+            RT_OBJECT_HOOK_CALL(rt_timer_exit_hook, (t));
             RT_DEBUG_LOG(RT_DEBUG_TIMER, ("current tick: %d\n", current_tick));
 
             if ((t->parent.flag & RT_TIMER_FLAG_PERIODIC) &&
@@ -582,7 +591,7 @@ void rt_soft_timer_check(void)
          */
         if ((current_tick - t->timeout_tick) < RT_TICK_MAX / 2)
         {
-            RT_OBJECT_HOOK_CALL(rt_timer_timeout_hook, (t));
+            RT_OBJECT_HOOK_CALL(rt_timer_enter_hook, (t));
 
             /* move node to the next */
             n = n->next;
@@ -598,6 +607,7 @@ void rt_soft_timer_check(void)
             /* re-get tick */
             current_tick = rt_tick_get();
 
+            RT_OBJECT_HOOK_CALL(rt_timer_exit_hook, (t));
             RT_DEBUG_LOG(RT_DEBUG_TIMER, ("current tick: %d\n", current_tick));
 
             /* lock scheduler */
