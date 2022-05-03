@@ -71,6 +71,22 @@ void at32_msp_usart_init(void *instance)
         gpio_init(GPIOB, &gpio_init_struct);
     }
 #endif
+#ifdef BSP_USING_UART6
+    if (USART6 == usart_x) {
+        crm_periph_clock_enable(CRM_USART6_PERIPH_CLOCK, TRUE);
+        crm_periph_clock_enable(CRM_GPIOC_PERIPH_CLOCK, TRUE);
+
+        gpio_init_struct.gpio_mode = GPIO_MODE_MUX;
+        gpio_init_struct.gpio_out_type = GPIO_OUTPUT_PUSH_PULL;
+        gpio_init_struct.gpio_pull = GPIO_PULL_NONE;
+        gpio_init_struct.gpio_pins = GPIO_PINS_6;
+        gpio_init(GPIOB, &gpio_init_struct);
+
+        gpio_init_struct.gpio_mode = GPIO_MODE_INPUT;
+        gpio_init_struct.gpio_pins = GPIO_PINS_7;
+        gpio_init(GPIOB, &gpio_init_struct);
+    }
+#endif
     /* add others */
 }
 #endif /* BSP_USING_SERIAL */

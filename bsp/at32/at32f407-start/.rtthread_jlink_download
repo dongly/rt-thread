@@ -1,0 +1,10 @@
+si 1
+si 1
+speed 15000
+device at32f407vgt7
+r
+h
+loadfile rtthread.bin 0x08000000
+r
+g
+q

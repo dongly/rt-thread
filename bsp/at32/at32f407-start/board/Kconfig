@@ -78,6 +78,9 @@ menu "On-chip Peripheral Drivers"
             config BSP_USING_UART3
                 bool "Enable UART3"
                 default n
+            config BSP_USING_UART6
+                bool "Enable UART6"
+                default n
         endif
 
     menuconfig BSP_USING_PWM
