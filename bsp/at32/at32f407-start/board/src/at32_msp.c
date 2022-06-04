@@ -80,11 +80,11 @@ void at32_msp_usart_init(void *instance)
         gpio_init_struct.gpio_out_type = GPIO_OUTPUT_PUSH_PULL;
         gpio_init_struct.gpio_pull = GPIO_PULL_NONE;
         gpio_init_struct.gpio_pins = GPIO_PINS_6;
-        gpio_init(GPIOB, &gpio_init_struct);
+        gpio_init(GPIOC, &gpio_init_struct);
 
         gpio_init_struct.gpio_mode = GPIO_MODE_INPUT;
         gpio_init_struct.gpio_pins = GPIO_PINS_7;
-        gpio_init(GPIOB, &gpio_init_struct);
+        gpio_init(GPIOC, &gpio_init_struct);
     }
 #endif
     /* add others */
