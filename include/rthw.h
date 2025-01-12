@@ -90,8 +90,9 @@ void rt_hw_cpu_dcache_ops(int ops, void* addr, int size);
 #endif
 
 void rt_hw_cpu_reset(void);
+void rt_hw_cpu_reset_hook(void);
 void rt_hw_cpu_shutdown(void);
-
+void rt_hw_cpu_shutdown_hook(void);
 const char *rt_hw_cpu_arch(void);
 
 rt_uint8_t *rt_hw_stack_init(void       *entry,
