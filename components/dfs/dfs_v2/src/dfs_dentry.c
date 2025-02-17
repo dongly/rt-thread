@@ -368,6 +368,8 @@ int dfs_dentry_init(void)
 
 int dfs_dentry_dump(int argc, char** argv)
 {
+    rt_used(argc);
+    rt_used(argv);
     int index = 0;
     struct dfs_dentry *entry = RT_NULL;
 

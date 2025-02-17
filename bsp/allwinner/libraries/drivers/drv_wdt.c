@@ -102,6 +102,19 @@ void rt_hw_cpu_reset(void)
     hal_watchdog_start(1);
     while(1);
 }
-MSH_CMD_EXPORT_ALIAS(rt_hw_cpu_reset, reboot, reset machine);
+
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+static int reboot(int argc, char **argv)
+{ 
+    rt_used(argc);
+    rt_used(argv);
+
+    rt_hw_cpu_reset();
+
+    return 0;
+}
+MSH_CMD_EXPORT(reboot, Reboot System);
+#endif /* RT_USING_FINSH */
 
 #endif /* RT_USING_WDT && BSP_USING_WDT */

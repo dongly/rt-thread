@@ -292,9 +292,10 @@ void es8388_pa_power(rt_bool_t enable)
     }
 }
 
-void estest()
+int estest(int argc, char **argv)
 {
-
+    rt_used(argc);
+    rt_used(argv);
     // reg_write(ES8388_DACCONTROL24, volume);
     reg_write(ES8388_ADCCONTROL1, 0x88);       /* R9,左右通道PGA增益设置 */
     reg_write(ES8388_ADCCONTROL2, 0x10);  // 使用板载麦克风
@@ -311,6 +312,6 @@ void estest()
     reg_write(ES8388_DACCONTROL24, 33); // LOUT1VOL balanced noise: 0x18
     reg_write(ES8388_DACCONTROL25, 33); // ROUT1VOL balanced noise: 0x18
 
-
+    return 0;
 }
 MSH_CMD_EXPORT(estest, test mic loop)

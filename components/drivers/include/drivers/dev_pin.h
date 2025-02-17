@@ -50,8 +50,11 @@
  *     rt_pin_write(BEEP_PIN_NUM, PIN_LOW);
  * }
  *
- * static void pin_beep_sample(void)
+ * static int pin_beep_sample(int argc, char *argv[])
  * {
+ *     rt_used(argc);
+ *     rt_used(argv);
+ * 
  *     rt_pin_mode(BEEP_PIN_NUM, PIN_MODE_OUTPUT);
  *     rt_pin_write(BEEP_PIN_NUM, PIN_LOW);
  *
@@ -63,6 +66,7 @@
  *     rt_pin_mode(KEY1_PIN_NUM, PIN_MODE_INPUT_PULLUP);
  *     rt_pin_attach_irq(KEY1_PIN_NUM, PIN_IRQ_MODE_FALLING, beep_off, RT_NULL);
  *     rt_pin_irq_enable(KEY1_PIN_NUM, PIN_IRQ_ENABLE);
+ *     return 0;
  * }
  *
  * MSH_CMD_EXPORT(pin_beep_sample, pin beep sample);

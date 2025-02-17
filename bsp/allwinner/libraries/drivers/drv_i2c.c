@@ -281,7 +281,7 @@ int rt_hw_i2c_init(void)
 INIT_BOARD_EXPORT(rt_hw_i2c_init);
 // #endif
 
-static void _i2c_test(int argc, char *args[])
+static int _i2c_test(int argc, char *args[])
 {
     struct rt_i2c_bus_device *i2c_bus;
     struct rt_i2c_msg msg[2];
@@ -314,11 +314,14 @@ static void _i2c_test(int argc, char *args[])
     {
         rt_i2c_transfer(i2c_bus, &msg[0], 2);
     }
+    return 0;
 }
 MSH_CMD_EXPORT_ALIAS(_i2c_test, i2c_test, i2c bus test);
 
-static void _pin_test(void)
+static int _pin_test(int argc, char *args[])
 {
+    rt_used(asgc);
+    rt_used(asgv);
     int i;
     rt_base_t pin;
 
@@ -331,6 +334,7 @@ static void _pin_test(void)
         rt_pin_write(pin, !!(i & 1));
         rt_thread_mdelay(2);
     }
+    return 0;
 }
 MSH_CMD_EXPORT_ALIAS(_pin_test, pin_test, gpio pin test);
 

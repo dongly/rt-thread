@@ -29,6 +29,9 @@
  *
  * static int adc_vol_sample(int argc, char *argv[])
  * {
+ *    rt_used(argc);
+ *    rt_used(argv);
+ * 
  *     rt_adc_device_t adc_dev;
  *     rt_uint32_t value, vol;
  *

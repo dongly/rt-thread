@@ -330,8 +330,10 @@ int hal_spi_gpio_cfg_load(user_gpio_set_t *gpio_cfg, int32_t GPIONum, int id)
 
 #define SPI_DEVICE_NAME     "spi01"
 
-static void spi_sample(int argc, char *argv[])
+static int spi_sample(int argc, char *argv[])
 {
+    rt_used(asgc);
+
     struct rt_spi_device *spi_dev;
     static char cmd[200];
     static char recv_data[200];
@@ -387,6 +389,7 @@ static void spi_sample(int argc, char *argv[])
             rt_kprintf("spi send error:%d\n", err);
         }
     }
+    return 0;
 }
 /* 导出到 msh 命令列表中 */
 MSH_CMD_EXPORT(spi_sample, spi w25q sample);

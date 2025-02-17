@@ -47,6 +47,8 @@ static void dma_test_cb(void *param)
 
 int cmd_test_dma(int argc, char **argv)
 {
+    rt_used(argc);
+    rt_used(argv);
     int ret, i;
     struct sunxi_dma_chan *hdma = NULL;
     char *buf1 = NULL,*buf2 = NULL;

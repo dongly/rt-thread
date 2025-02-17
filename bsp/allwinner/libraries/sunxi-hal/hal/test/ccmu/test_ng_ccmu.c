@@ -55,6 +55,8 @@ static uint32_t esMEMS_FreeMemSize(void)
 
 int cmd_test_ng_ccmu(int argc, char **argv)
 {
+    rt_used(argc);
+    rt_used(argv);
     int i, j;
 
     hal_clk_type_t clk_type;

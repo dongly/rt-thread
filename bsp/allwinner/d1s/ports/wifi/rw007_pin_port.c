@@ -47,23 +47,29 @@ static void rw007_gpio_init(void)
     rt_pin_mode(INT_BUSY_PIN, PIN_MODE_INPUT_PULLUP);
 }
 
-static void _rw007_int(int argc, char *args[])
+static int _rw007_int(int argc, char *args[])
 {
+    rt_used(argc);
     int v;
 
     v = atoi(args[1]);
 
     rt_pin_mode(RESET_PIN, PIN_MODE_OUTPUT);
     rt_pin_write(RESET_PIN, v);
+    return 0;
 }
 MSH_CMD_EXPORT_ALIAS(_rw007_int, _rw007_int, rw007 int pin);
 
-static void _rw007_reset(void)
+static int _rw007_reset(int argc, char *args[])
 {
+    rt_used(argc);
+    rt_used(args);
+
     rt_pin_mode(RESET_PIN, PIN_MODE_OUTPUT);
     rt_pin_write(RESET_PIN, PIN_LOW);
     rt_thread_delay(rt_tick_from_millisecond(100));
     rt_pin_write(RESET_PIN, PIN_HIGH);
+    return 0;
 }
 MSH_CMD_EXPORT_ALIAS(_rw007_reset, rw007_reset, rw007 reset);
 
@@ -100,7 +106,7 @@ void wifi_init_thread_entry(void *p)
     rt_thread_mdelay(1000);
 }
 
-int rt_rw007_init(void)
+static int rt_rw007_init()
 {
     rt_thread_t thread = NULL;
 
@@ -114,7 +120,6 @@ int rt_rw007_init(void)
 }
 #ifdef BSP_USING_SPI0
 INIT_COMPONENT_EXPORT(rt_rw007_init);
-// MSH_CMD_EXPORT_ALIAS(rt_rw007_init, rw007_init, rw007 init);
 #endif
 
 static void int_wifi_irq(void *p)

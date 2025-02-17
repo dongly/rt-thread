@@ -919,8 +919,11 @@ RTM_EXPORT(dfs_normalize_path);
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
-int list_fd(void)
+int list_fd(int argc, char *argv[])
 {
+    rt_used(argc);
+    rt_used(argv);
+
     int index;
     struct dfs_fdtable *fd_table;
 
@@ -963,8 +966,11 @@ int list_fd(void)
 }
 MSH_CMD_EXPORT(list_fd, list file descriptor);
 
-int dfs_fd_dump(int argc, char** argv)
+int dfs_fd_dump(int argc, char *argv[])
 {
+    rt_used(argc);
+    rt_used(argv);
+
     int index;
 
     if (dfs_file_lock() != RT_EOK)

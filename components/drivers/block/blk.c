@@ -498,8 +498,11 @@ const char *convert_size(struct rt_device_blk_geometry *geome,
     return size_name[size_index];
 }
 
-static int list_blk(int argc, char**argv)
+static int list_blk(int argc, char *argv[])
 {
+    rt_used(argc);
+    rt_used(argv);
+
     rt_ubase_t level;
     rt_size_t cap, minor;
     const char *size_name;

@@ -84,8 +84,10 @@ rt_uint32_t arm_gic_cpumask_to_affval(rt_uint32_t *cpu_mask, rt_uint32_t *cluste
 
 #ifdef RT_USING_SMP
 
-void send_core_isg(void)
+int send_core_isg(int argc, char *argv[])
 {
+    rt_used(argc);
+    rt_used(argv);
     for (rt_size_t i = 0; i <= 0xf; i++)
     {
         /* code */
@@ -93,6 +95,7 @@ void send_core_isg(void)
         arm_gic_send_affinity_sgi(0, 0, i, 0);
         rt_thread_mdelay(100);
     }
+    return 0;
 }
 MSH_CMD_EXPORT(send_core_isg, send_core_isg);
 

@@ -32,15 +32,21 @@ void machine_shutdown(void)
 #include <finsh.h>
 
 #ifdef FINSH_USING_MSH
-int cmd_reset(int argc, char** argv)
+int cmd_reboot(int argc, char *argv[])
 {
+    rt_used(argc);
+    rt_used(argv);
+
     rt_hw_cpu_reset();
     return 0;
 }
-MSH_CMD_EXPORT_ALIAS(cmd_reset, reset, restart the system);
+MSH_CMD_EXPORT_ALIAS(cmd_boot, reboot, reboot system);
 
-int cmd_shutdown(int argc, char** argv)
+int cmd_shutdown(int argc, char *argv[])
 {
+    rt_used(argc);
+    rt_used(argv);
+
     rt_hw_cpu_shutdown();
     return 0;
 }

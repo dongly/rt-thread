@@ -30,8 +30,6 @@
 #include <dlmodule.h>
 #endif /* RT_USING_MODULE */
 
-typedef int (*cmd_function_t)(int argc, char **argv);
-
 static int msh_help(int argc, char **argv)
 {
     rt_kprintf("RT-Thread shell commands:\n");
@@ -227,10 +225,10 @@ static int msh_split(char *cmd, rt_size_t length, char *argv[FINSH_ARG_MAX])
     return argc;
 }
 
-static cmd_function_t msh_get_cmd(char *cmd, int size)
+static syscall_func msh_get_cmd(char *cmd, int size)
 {
     struct finsh_syscall *index;
-    cmd_function_t cmd_func = RT_NULL;
+    syscall_func cmd_func = RT_NULL;
 
     for (index = _syscall_table_begin;
             index < _syscall_table_end;
@@ -239,7 +237,7 @@ static cmd_function_t msh_get_cmd(char *cmd, int size)
         if (strncmp(index->name, cmd, size) == 0 &&
                 index->name[size] == '\0')
         {
-            cmd_func = (cmd_function_t)index->func;
+            cmd_func = (syscall_func)index->func;
             break;
         }
     }
@@ -324,7 +322,7 @@ static int _msh_exec_cmd(char *cmd, rt_size_t length, int *retp)
 {
     int argc;
     rt_size_t cmd0_size = 0;
-    cmd_function_t cmd_func;
+    syscall_func cmd_func;
     char *argv[FINSH_ARG_MAX];
 
     RT_ASSERT(cmd);

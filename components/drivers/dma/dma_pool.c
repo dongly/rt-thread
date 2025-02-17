@@ -661,8 +661,11 @@ _found:
 }
 
 #if defined(RT_USING_CONSOLE) && defined(RT_USING_MSH)
-static int list_dma_pool(int argc, char**argv)
+static int list_dma_pool(int argc, char *argv[])
 {
+    rt_used(argc);
+    rt_used(argv);
+
     int count = 0;
     rt_region_t *region;
     struct rt_dma_pool *pool;

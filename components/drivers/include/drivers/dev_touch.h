@@ -70,8 +70,10 @@
  *     return 0;
  * }
  *
- * static int gt9147_sample(void)
+ * static int gt9147_sample(int argc, char *argv[])
  * {
+ *     rt_used(argc);
+ *     rt_used(argv);
  *     // 查找 Touch 设备
  *     dev = rt_device_find("touch");
  *

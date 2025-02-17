@@ -190,8 +190,11 @@ INIT_BOARD_EXPORT(sdram_init);
 
 #ifdef DRV_DEBUG
 #ifdef FINSH_USING_MSH
-int sdram_sample(void)
+int sdram_sample(int argc, char *argv[])
 {
+    rt_used(argc);
+    rt_used(argv);
+
     int i = 0;
     uint32_t start_time = 0, time_cast = 0;
 #if SDRAM_DATA_WIDTH == 8

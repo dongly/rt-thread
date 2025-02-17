@@ -48,6 +48,8 @@ static irqreturn_t gpio_irq_test(int unused, void *data)
 
 int cmd_test_gpio(int argc, char **argv)
 {
+    rt_used(argc);
+    rt_used(argv);
     uint32_t irq;
     int ret = 0;
     gpio_pull_status_t pull_state;

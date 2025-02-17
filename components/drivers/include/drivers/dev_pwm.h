@@ -31,6 +31,8 @@
  *
  * static int pwm_led_sample(int argc, char *argv[])
  * {
+ *     rt_used(argc);
+ *     rt_used(argv);
  *     rt_uint32_t period, pulse, dir;
  *
  *     period = 500000;    // 周期为0.5ms，单位为纳秒ns

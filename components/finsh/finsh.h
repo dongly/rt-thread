@@ -28,7 +28,7 @@
 #define FINSH_DESC(cmd, desc)
 #endif
 
-typedef long (*syscall_func)(void);
+typedef int (*syscall_func)(int argc, char **argv);
 #ifdef FINSH_USING_SYMTAB
 
 #ifdef __TI_COMPILER_VERSION__

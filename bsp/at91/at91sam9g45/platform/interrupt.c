@@ -449,6 +449,9 @@ void list_irq(void)
 #ifdef FINSH_USING_MSH
 int cmd_list_irq(int argc, char** argv)
 {
+    rt_used(argc);
+    rt_used(argv);
+
     list_irq();
     return 0;
 }

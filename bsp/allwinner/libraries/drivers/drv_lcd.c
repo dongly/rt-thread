@@ -804,10 +804,13 @@ static int lcd_draw_point(int args, char *argv[])
 }
 MSH_CMD_EXPORT(lcd_draw_point, draw a point on lcd);
 
-void lcd_pwm_test(int argc, char **argv)
+int lcd_pwm_test(int argc, char **argv)
 {
-    set_lcd_backlight(atoi(argv[1]));
-}
+    rt_used(argc);
 
+    set_lcd_backlight(atoi(argv[1]));
+
+    return 0;
+}
 MSH_CMD_EXPORT(lcd_pwm_test, set pwm);
 #endif

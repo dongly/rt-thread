@@ -366,8 +366,10 @@ INIT_COMPONENT_EXPORT(rt_hw_lcm_port);
 #endif /* BOARD_USING_LCM */
 
 
-int buzzer_test(void)
+int buzzer_test(int argc, char **argv)
 {
+    rt_used(argc);
+    rt_used(argv);
     PlayRingTone();
     return 0;
 }
