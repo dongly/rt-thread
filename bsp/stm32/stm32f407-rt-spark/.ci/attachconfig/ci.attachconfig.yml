@@ -1,6 +1,11 @@
 scons.args: &scons
     scons_arg:
       - '--strict'
+# ------ nano CI ------
+nano:
+    <<: *scons
+    kconfig:
+      - CONFIG_RT_USING_NANO=y
 # ------ kernel CI ------
 kernel.klibc-stdlib:
     <<: *scons
@@ -141,6 +146,14 @@ online-packages.system.os-wrappers:
     <<: *scons
     kconfig:
       - CONFIG_PKG_USING_FREERTOS_WRAPPER=y
+online-packages.ai.llmchat:
+    <<: *scons
+    kconfig:
+      - CONFIG_BSP_USING_RW007_WLAN=y
+      - CONFIG_WEBCLIENT_USING_MBED_TLS=y
+      - CONFIG_MBEDTLS_SSL_MAX_CONTENT_LEN=6144
+      - CONFIG_PKG_USING_LLMCHAT=y
+      - CONFIG_PKG_USING_LLMCHAT_LATEST_VERSION=y
 # ------ peripheral CI ------
 peripheral.aht21:
     kconfig:
@@ -182,8 +195,11 @@ peripheral.sram:
 peripheral.usb_mouse:
     kconfig:
       - CONFIG_BSP_USING_USB_MOUSE=y
-# ------ nano CI ------
-nano:
-    <<: *scons
+# ------ component CI ------
+component.cherryusb_cdc:
     kconfig:
-      - CONFIG_RT_USING_NANO=y
+      - CONFIG_RT_USING_CHERRYUSB=y
+      - CONFIG_RT_CHERRYUSB_DEVICE=y
+      - CONFIG_RT_CHERRYUSB_DEVICE_DWC2_ST=y
+      - CONFIG_RT_CHERRYUSB_DEVICE_CDC_ACM=y
+      - CONFIG_RT_CHERRYUSB_DEVICE_TEMPLATE_CDC_ACM=y
