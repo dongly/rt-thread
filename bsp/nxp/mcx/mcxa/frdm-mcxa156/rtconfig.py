@@ -44,10 +44,10 @@ if PLATFORM == 'gcc':
     OBJCPY = PREFIX + 'objcopy'
     STRIP = PREFIX + 'strip'
 
-    DEVICE = ' -mcpu=' + CPU + '+nodsp' + ' -mthumb -mfloat-abi=soft -ffunction-sections -fdata-sections'
-    CFLAGS = DEVICE + ' -Wall'
+    DEVICE = ' -mcpu=' + CPU + ' -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -ffunction-sections -fdata-sections'
+    CFLAGS = DEVICE + ' -Wall -D__FPU_PRESENT'
     AFLAGS = ' -c' + DEVICE + ' -x assembler-with-cpp -D__START=entry -D__STARTUP_CLEAR_BSS'
-    LFLAGS = DEVICE + ' -specs=nano.specs -specs=nosys.specs -Wl,--defsym=__heap_size__=0x2000,--gc-sections,-Map=rtthread.map,--print-memory-usage -Tboard/linker_scripts/MCXA156_flash.ld'
+    LFLAGS = DEVICE + ' -specs=nano.specs -specs=nosys.specs -Wl,--defsym=__heap_size__=0x8000,--gc-sections,-Map=rtthread.map,--print-memory-usage -Tboard/linker_scripts/MCXA156_flash.ld'
 
     CPATH = ''
     LPATH = ''
@@ -192,7 +192,7 @@ elif PLATFORM == 'iccarm':
 
 def dist_handle(BSP_ROOT, dist_dir):
     cwd_path = os.getcwd()
-    sys.path.append(os.path.join(os.path.dirname(BSP_ROOT), 'tools'))
+    sys.path.append(os.path.join(os.path.dirname(BSP_ROOT), '..', 'tools'))
     from sdk_dist import dist_do_building
     dist_do_building(BSP_ROOT, dist_dir)
     

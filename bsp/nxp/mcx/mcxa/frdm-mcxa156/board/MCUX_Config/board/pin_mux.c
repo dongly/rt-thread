@@ -22,6 +22,8 @@ processor_version: 0.15.0
  */
 /* clang-format on */
 
+#include "rtconfig.h"
+
 #include "fsl_common.h"
 #include "fsl_port.h"
 #include "pin_mux.h"
@@ -59,12 +61,31 @@ BOARD_InitPins:
  * END ****************************************************************************************************************/
 void BOARD_InitPins(void)
 {
-    /* PORT0: Peripheral clock is enabled */
+    /* Enable all PORT clocks */
     CLOCK_EnableClock(kCLOCK_GatePORT0);
-    /* LPUART0 peripheral is released from reset */
-    RESET_ReleasePeripheralReset(kLPUART0_RST_SHIFT_RSTn);
-    /* PORT0 peripheral is released from reset */
+    CLOCK_EnableClock(kCLOCK_GatePORT1);
+    CLOCK_EnableClock(kCLOCK_GatePORT2);
+    CLOCK_EnableClock(kCLOCK_GatePORT3);
+
+    /* Enable all GPIO clocks */
+    CLOCK_EnableClock(kCLOCK_GateGPIO0);
+    CLOCK_EnableClock(kCLOCK_GateGPIO1);
+    CLOCK_EnableClock(kCLOCK_GateGPIO2);
+    CLOCK_EnableClock(kCLOCK_GateGPIO3);
+
+    /* Release all PORT resets */
     RESET_ReleasePeripheralReset(kPORT0_RST_SHIFT_RSTn);
+    RESET_ReleasePeripheralReset(kPORT1_RST_SHIFT_RSTn);
+    RESET_ReleasePeripheralReset(kPORT2_RST_SHIFT_RSTn);
+    RESET_ReleasePeripheralReset(kPORT3_RST_SHIFT_RSTn);
+
+    RESET_ReleasePeripheralReset(kGPIO0_RST_SHIFT_RSTn);
+    RESET_ReleasePeripheralReset(kGPIO1_RST_SHIFT_RSTn);
+    RESET_ReleasePeripheralReset(kGPIO2_RST_SHIFT_RSTn);
+    RESET_ReleasePeripheralReset(kGPIO3_RST_SHIFT_RSTn);
+
+    /* Release LPUART0 resets */
+    RESET_ReleasePeripheralReset(kLPUART0_RST_SHIFT_RSTn);
 
     const port_pin_config_t port0_2_pin78_config = {/* Internal pull-up resistor is enabled */
                                                     kPORT_PullUp,
@@ -115,6 +136,134 @@ void BOARD_InitPins(void)
                                                     kPORT_UnlockRegister};
     /* PORT0_3 (pin 79) is configured as LPUART0_TXD */
     PORT_SetPinConfig(PORT0, 3U, &port0_3_pin79_config);
+
+    const port_pin_config_t port3_12_pin63_config = {/* Internal pull-up resistor is enabled */
+                                                     kPORT_PullDisable,
+                                                     /* Low internal pull resistor value is selected. */
+                                                     kPORT_LowPullResistor,
+                                                     /* Fast slew rate is configured */
+                                                     kPORT_FastSlewRate,
+                                                     /* Passive input filter is disabled */
+                                                     kPORT_PassiveFilterDisable,
+                                                     /* Open drain output is disabled */
+                                                     kPORT_OpenDrainEnable,
+                                                     /* Low drive strength is configured */
+                                                     kPORT_LowDriveStrength,
+                                                     /* Normal drive strength is configured */
+                                                     kPORT_NormalDriveStrength,
+                                                     /* Pin is configured as LPUART0_TXD */
+                                                     kPORT_MuxAsGpio,
+                                                     /* Digital input enabled */
+                                                     kPORT_InputBufferEnable,
+                                                     /* Digital input is not inverted */
+                                                     kPORT_InputNormal,
+                                                     /* Pin Control Register fields [15:0] are not locked */
+                                                     kPORT_UnlockRegister};
+    /* PORT3_12 (pin 63) is configured as LED_RED */
+    PORT_SetPinConfig(PORT3, 12U, &port3_12_pin63_config);
+
+#ifdef BSP_USING_SPI1
+    const port_pin_config_t port2_12_pin34_config = {/* Internal pull-up/down resistor is disabled */
+                                                     kPORT_PullDisable,
+                                                     /* Low internal pull resistor value is selected. */
+                                                     kPORT_LowPullResistor,
+                                                     /* Fast slew rate is configured */
+                                                     kPORT_FastSlewRate,
+                                                     /* Passive input filter is disabled */
+                                                     kPORT_PassiveFilterDisable,
+                                                     /* Open drain output is disabled */
+                                                     kPORT_OpenDrainDisable,
+                                                     /* Low drive strength is configured */
+                                                     kPORT_LowDriveStrength,
+                                                     /* Normal drive strength is configured */
+                                                     kPORT_NormalDriveStrength,
+                                                     /* Pin is configured as LPSPI1_SCK */
+                                                     kPORT_MuxAlt2,
+                                                     /* Digital input enabled */
+                                                     kPORT_InputBufferEnable,
+                                                     /* Digital input is not inverted */
+                                                     kPORT_InputNormal,
+                                                     /* Pin Control Register fields [15:0] are not locked */
+                                                     kPORT_UnlockRegister};
+    /* PORT2_12 (pin 34) is configured as LPSPI1_SCK */
+    PORT_SetPinConfig(PORT2, 12U, &port2_12_pin34_config);
+
+    const port_pin_config_t port2_13_pin35_config = {/* Internal pull-up/down resistor is disabled */
+                                                     kPORT_PullDisable,
+                                                     /* Low internal pull resistor value is selected. */
+                                                     kPORT_LowPullResistor,
+                                                     /* Fast slew rate is configured */
+                                                     kPORT_FastSlewRate,
+                                                     /* Passive input filter is disabled */
+                                                     kPORT_PassiveFilterDisable,
+                                                     /* Open drain output is disabled */
+                                                     kPORT_OpenDrainDisable,
+                                                     /* Low drive strength is configured */
+                                                     kPORT_LowDriveStrength,
+                                                     /* Normal drive strength is configured */
+                                                     kPORT_NormalDriveStrength,
+                                                     /* Pin is configured as LPSPI1_SDO */
+                                                     kPORT_MuxAlt2,
+                                                     /* Digital input enabled */
+                                                     kPORT_InputBufferEnable,
+                                                     /* Digital input is not inverted */
+                                                     kPORT_InputNormal,
+                                                     /* Pin Control Register fields [15:0] are not locked */
+                                                     kPORT_UnlockRegister};
+    /* PORT2_13 (pin 35) is configured as LPSPI1_SDO */
+    PORT_SetPinConfig(PORT2, 13U, &port2_13_pin35_config);
+
+    const port_pin_config_t port2_16_pin37_config = {/* Internal pull-up/down resistor is disabled */
+                                                     kPORT_PullDisable,
+                                                     /* Low internal pull resistor value is selected. */
+                                                     kPORT_LowPullResistor,
+                                                     /* Fast slew rate is configured */
+                                                     kPORT_FastSlewRate,
+                                                     /* Passive input filter is disabled */
+                                                     kPORT_PassiveFilterDisable,
+                                                     /* Open drain output is disabled */
+                                                     kPORT_OpenDrainDisable,
+                                                     /* Low drive strength is configured */
+                                                     kPORT_LowDriveStrength,
+                                                     /* Normal drive strength is configured */
+                                                     kPORT_NormalDriveStrength,
+                                                     /* Pin is configured as LPSPI1_SDI */
+                                                     kPORT_MuxAlt2,
+                                                     /* Digital input enabled */
+                                                     kPORT_InputBufferEnable,
+                                                     /* Digital input is not inverted */
+                                                     kPORT_InputNormal,
+                                                     /* Pin Control Register fields [15:0] are not locked */
+                                                     kPORT_UnlockRegister};
+    /* PORT2_16 (pin 37) is configured as LPSPI1_SDI */
+    PORT_SetPinConfig(PORT2, 16U, &port2_16_pin37_config);
+
+    const port_pin_config_t port2_6_pin28_config = {/* Internal pull-up/down resistor is disabled */
+                                                    kPORT_PullDisable,
+                                                    /* Low internal pull resistor value is selected. */
+                                                    kPORT_LowPullResistor,
+                                                    /* Fast slew rate is configured */
+                                                    kPORT_FastSlewRate,
+                                                    /* Passive input filter is disabled */
+                                                    kPORT_PassiveFilterDisable,
+                                                    /* Open drain output is disabled */
+                                                    kPORT_OpenDrainDisable,
+                                                    /* Low drive strength is configured */
+                                                    kPORT_LowDriveStrength,
+                                                    /* Normal drive strength is configured */
+                                                    kPORT_NormalDriveStrength,
+                                                    /* Pin is configured as LPSPI1_PCS1 */
+                                                    kPORT_MuxAsGpio,
+                                                    /* Digital input enabled */
+                                                    kPORT_InputBufferEnable,
+                                                    /* Digital input is not inverted */
+                                                    kPORT_InputNormal,
+                                                    /* Pin Control Register fields [15:0] are not locked */
+                                                    kPORT_UnlockRegister};
+    /* PORT2_6 (pin 20) is configured as LPSPI1_PCS1 */
+    PORT_SetPinConfig(PORT2, 6U, &port2_6_pin28_config);
+#endif
+
 }
 /***********************************************************************************************************************
  * EOF
