@@ -341,7 +341,7 @@ static int stm32_adc_init(void)
     int result = RT_EOK;
     /* save adc name */
     char name_buf[5] = {'a', 'd', 'c', '0', 0};
-    int i = 0;
+    rt_uint32_t i = 0;
 
     for (i = 0; i < sizeof(adc_config) / sizeof(adc_config[0]); i++)
     {
