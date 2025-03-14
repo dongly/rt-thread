@@ -32,7 +32,7 @@
 #define LOG_TAG              "at.skt"
 #include <at_log.h>
 
-#include <anv_leaks.h>
+// #include <anv_leaks.h>
 
 #ifdef AT_USING_SOCKET
 
