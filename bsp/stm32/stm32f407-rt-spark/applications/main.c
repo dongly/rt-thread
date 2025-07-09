@@ -12,15 +12,26 @@
 #include <board.h>
 #include <rtthread.h>
 #include <drv_gpio.h>
+#include "usbh_core.h"
+#include "lwip/tcpip.h"
 #ifndef RT_USING_NANO
 #include <rtdevice.h>
 #endif /* RT_USING_NANO */
 
 #define GPIO_LED_B    GET_PIN(F, 11)
 #define GPIO_LED_R    GET_PIN(F, 12)
+
+#define ML307_PWR_PIN    GET_PIN(D, 3)
 int main(void)
 {
     rt_pin_mode(GPIO_LED_R, PIN_MODE_OUTPUT);
+    rt_pin_mode(GPIO_LED_B, PIN_MODE_OUTPUT);
+    rt_pin_mode(ML307_PWR_PIN, PIN_MODE_OUTPUT);
+    rt_pin_write(ML307_PWR_PIN,PIN_LOW);
+
+    rt_thread_mdelay(5000);
+
+    usbh_initialize(0, USB_OTG_HS_PERIPH_BASE);
 
     while (1)
     {
