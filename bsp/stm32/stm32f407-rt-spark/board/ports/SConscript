@@ -57,8 +57,6 @@ if GetDepend(['BSP_USING_AUDIO']):
 if GetDepend(['BSP_USING_AUDIO_RECORD']):
     src += Glob('audio/drv_mic.c')
 
-path += [cwd + '/cherryusb']
-
 CPPDEFINES = ['STM32F407xx']
 group = DefineGroup('Drivers', src, depend = [''], CPPPATH = path, CPPDEFINES = CPPDEFINES)
 

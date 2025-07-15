@@ -24,14 +24,14 @@
 #define ML307_PWR_PIN    GET_PIN(D, 3)
 int main(void)
 {
-    rt_pin_mode(GPIO_LED_R, PIN_MODE_OUTPUT);
-    rt_pin_mode(GPIO_LED_B, PIN_MODE_OUTPUT);
-    rt_pin_mode(ML307_PWR_PIN, PIN_MODE_OUTPUT);
-    rt_pin_write(ML307_PWR_PIN,PIN_LOW);
+    // rt_pin_mode(GPIO_LED_R, PIN_MODE_OUTPUT);
+    // rt_pin_mode(GPIO_LED_B, PIN_MODE_OUTPUT);
+    // rt_pin_mode(ML307_PWR_PIN, PIN_MODE_OUTPUT);
+    // rt_pin_write(ML307_PWR_PIN,PIN_LOW);
 
-    rt_thread_mdelay(10000);
+    // rt_thread_mdelay(10000);
 
-    usbh_initialize(0, USB_OTG_HS_PERIPH_BASE);
+    // usbh_initialize(0, USB_OTG_HS_PERIPH_BASE);
 
     while (1)
     {

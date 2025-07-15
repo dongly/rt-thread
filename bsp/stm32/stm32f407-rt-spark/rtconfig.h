@@ -161,14 +161,18 @@
 #define RT_CHERRYUSB_HOST
 #define RT_CHERRYUSB_HOST_DWC2_ST
 #define RT_CHERRYUSB_HOST_CDC_ACM
-#define RT_CHERRYUSB_HOST_HID
-#define RT_CHERRYUSB_HOST_CDC_ECM
 #define RT_CHERRYUSB_HOST_CDC_RNDIS
-#define RT_CHERRYUSB_HOST_CDC_NCM
-#define CONFIG_USBHOST_PLATFORM_CDC_ECM
 #define CONFIG_USBHOST_PLATFORM_CDC_RNDIS
-#define CONFIG_USBHOST_PLATFORM_CDC_NCM
+#define CONFIG_USBHOST_PSC_PRIO 0
+#define CONFIG_USBHOST_PSC_STACKSIZE 4096
+#define CONFIG_USBHOST_REQUEST_BUFFER_LEN 512
+#define CONFIG_USBHOST_CONTROL_TRANSFER_TIMEOUT 500
 #define RT_LWIP_PBUF_POOL_BUFSIZE 1600
+
+/* Select USB host template, please select class driver first */
+
+#define CONFIG_TEST_USBH_CDC_ACM 0
+/* end of Select USB host template, please select class driver first */
 /* end of Device Drivers */
 
 /* C/C++ and POSIX layer */
@@ -259,6 +263,11 @@
 #define LWIP_SO_LINGER 0
 #define LWIP_NETIF_LOOPBACK 0
 #define RT_LWIP_USING_PING
+#define RT_USING_AT
+#define AT_USING_CLIENT
+#define AT_CLIENT_NUM_MAX 1
+#define AT_USING_CLI
+#define AT_SW_VERSION_NUM 0x10301
 /* end of Network */
 
 /* Memory protection */
@@ -267,6 +276,21 @@
 
 /* Utilities */
 
+#define RT_USING_ULOG
+#define ULOG_OUTPUT_LVL_D
+#define ULOG_OUTPUT_LVL 7
+#define ULOG_USING_ISR_LOG
+#define ULOG_ASSERT_ENABLE
+#define ULOG_LINE_BUF_SIZE 128
+
+/* log format */
+
+#define ULOG_USING_COLOR
+#define ULOG_OUTPUT_TIME
+#define ULOG_OUTPUT_LEVEL
+#define ULOG_OUTPUT_TAG
+/* end of log format */
+#define ULOG_BACKEND_USING_CONSOLE
 /* end of Utilities */
 
 /* Using USB legacy version */
