@@ -29,7 +29,7 @@ int main(void)
     rt_pin_mode(ML307_PWR_PIN, PIN_MODE_OUTPUT);
     rt_pin_write(ML307_PWR_PIN,PIN_LOW);
 
-    rt_thread_mdelay(5000);
+    rt_thread_mdelay(10000);
 
     usbh_initialize(0, USB_OTG_HS_PERIPH_BASE);
 

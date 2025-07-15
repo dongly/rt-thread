@@ -665,4 +665,7 @@
 #define LWIP_HOOK_UNKNOWN_ETH_PROTOCOL lwip_hook_unknown_eth_protocol
 #endif /* RT_LWIP_ENABLE_USER_HOOKS */
 
+
+#define LWIP_TCPIP_CORE_LOCKING_INPUT   1
+
 #endif /* __LWIPOPTS_H__ */
