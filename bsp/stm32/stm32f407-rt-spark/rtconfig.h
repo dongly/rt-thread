@@ -10,6 +10,7 @@
 
 /* rt_vsnprintf options */
 
+#define RT_KLIBC_USING_VSNPRINTF_LONGLONG
 /* end of rt_vsnprintf options */
 
 /* rt_vsscanf options */
@@ -106,7 +107,7 @@
 /* end of Memory Management */
 #define RT_USING_DEVICE
 #define RT_USING_CONSOLE
-#define RT_CONSOLEBUF_SIZE 128
+#define RT_CONSOLEBUF_SIZE 256
 #define RT_CONSOLE_DEVICE_NAME "uart6"
 #define RT_VER_NUM 0x50201
 #define RT_BACKTRACE_LEVEL_MAX_NR 32
@@ -156,6 +157,9 @@
 #define RT_USING_I2C
 #define RT_USING_I2C_BITOPS
 #define RT_USING_PWM
+#define RT_USING_RTC
+#define RT_USING_SOFT_RTC
+#define RT_USING_WDT
 #define RT_USING_PIN
 #define RT_USING_CHERRYUSB
 #define RT_CHERRYUSB_HOST
@@ -287,6 +291,7 @@
 
 #define ULOG_USING_COLOR
 #define ULOG_OUTPUT_TIME
+#define ULOG_TIME_USING_TIMESTAMP
 #define ULOG_OUTPUT_LEVEL
 #define ULOG_OUTPUT_TAG
 /* end of log format */

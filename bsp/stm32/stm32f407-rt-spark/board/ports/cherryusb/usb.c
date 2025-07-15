@@ -5,7 +5,7 @@
 
 int usb_init(void)
 {
-    rt_thread_mdelay(10000); // 等待系统稳定
+    rt_thread_mdelay(100); // 等待系统稳定
     rt_kprintf("USB init...\n");
     usbh_initialize(0, USB_OTG_HS_PERIPH_BASE);
     return RT_EOK;
