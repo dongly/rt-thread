@@ -164,19 +164,9 @@
 #define RT_USING_CHERRYUSB
 #define RT_CHERRYUSB_HOST
 #define RT_CHERRYUSB_HOST_DWC2_ST
-#define RT_CHERRYUSB_HOST_CDC_ACM
 #define RT_CHERRYUSB_HOST_CDC_RNDIS
 #define CONFIG_USBHOST_PLATFORM_CDC_RNDIS
-#define CONFIG_USBHOST_PSC_PRIO 0
-#define CONFIG_USBHOST_PSC_STACKSIZE 4096
-#define CONFIG_USBHOST_REQUEST_BUFFER_LEN 512
-#define CONFIG_USBHOST_CONTROL_TRANSFER_TIMEOUT 500
 #define RT_LWIP_PBUF_POOL_BUFSIZE 1600
-
-/* Select USB host template, please select class driver first */
-
-#define CONFIG_TEST_USBH_CDC_ACM 0
-/* end of Select USB host template, please select class driver first */
 /* end of Device Drivers */
 
 /* C/C++ and POSIX layer */
@@ -334,6 +324,16 @@
 
 /* end of CYW43439 WiFi */
 /* end of Wi-Fi */
+#define PKG_USING_NETUTILS
+#define PKG_NETUTILS_NTP
+#define NTP_USING_AUTO_SYNC
+#define NTP_AUTO_SYNC_FIRST_DELAY 30
+#define NTP_AUTO_SYNC_PERIOD 3600
+#define NETUTILS_NTP_HOSTNAME "cn.ntp.org.cn"
+#define NETUTILS_NTP_HOSTNAME2 "ntp.aliyun.com"
+#define NETUTILS_NTP_HOSTNAME3 "edu.ntp.org.cn"
+#define PKG_USING_NETUTILS_LATEST_VERSION
+#define PKG_NETUTILS_VER_NUM 0x99999
 
 /* IoT Cloud */
 
