@@ -433,6 +433,8 @@ void rt_hw_hard_fault_exception(struct exception_info *exception_info)
  */
 void rt_hw_cpu_reset(void)
 {
+    rt_kprintf("Reset ...\n");
+    rt_hw_cpu_reset_hook();
     SCB_AIRCR = SCB_RESET_VALUE;
 }
 

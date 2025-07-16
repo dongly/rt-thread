@@ -32,6 +32,8 @@
 #define LOG_TAG              "at.skt"
 #include <at_log.h>
 
+// #include <anv_leaks.h>
+
 #ifdef AT_USING_SOCKET
 
 #define HTONS_PORT(x) ((((x) & 0x00ffUL) << 8) | (((x) & 0xff00UL) >> 8))

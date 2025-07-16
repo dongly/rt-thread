@@ -69,11 +69,22 @@ rt_weak void rt_hw_us_delay(rt_uint32_t us)
         "Please consider implementing rt_hw_us_delay() in another file.");
 }
 
+rt_weak void rt_hw_cpu_reset_hook(void)
+{
+    ;
+}
+
 rt_weak void rt_hw_cpu_reset(void)
 {
     LOG_W("rt_hw_cpu_reset() doesn't support for this board."
         "Please consider implementing rt_hw_cpu_reset() in another file.");
+    rt_hw_cpu_reset_hook();
     return;
+}
+
+rt_weak void rt_hw_cpu_shutdown_hook(void)
+{
+    ;
 }
 
 rt_weak void rt_hw_cpu_shutdown(void)
@@ -81,6 +92,7 @@ rt_weak void rt_hw_cpu_shutdown(void)
     LOG_I("CPU shutdown...");
     LOG_W("Using default rt_hw_cpu_shutdown()."
         "Please consider implementing rt_hw_cpu_shutdown() in another file.");
+    rt_hw_cpu_shutdown_hook();
     rt_hw_interrupt_disable();
     RT_ASSERT(0);
     return;

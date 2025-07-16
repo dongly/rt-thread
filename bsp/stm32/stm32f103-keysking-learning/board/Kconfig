@@ -15,7 +15,6 @@ menu "Onboard Peripheral Drivers"
         default n
 
 
-
 endmenu
 
 menu "On-chip Peripheral Drivers"
