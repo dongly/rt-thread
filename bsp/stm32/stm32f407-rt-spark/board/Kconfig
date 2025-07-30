@@ -875,6 +875,7 @@ menu "Board extended module Drivers"
 
         endif
 
+    rsource "ports/at_device/ml307r/Kconfig"
 endmenu
 
 endmenu

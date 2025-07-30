@@ -2,7 +2,7 @@
     "bsps": {
         "folder": "bsp",
         "stars": [
-            "qemu-vexpress-a9"
+            "stm32\\stm32f407-rt-spark"
         ]
     }
 }

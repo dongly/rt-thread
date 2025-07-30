@@ -334,6 +334,9 @@
 #define NETUTILS_NTP_HOSTNAME3 "edu.ntp.org.cn"
 #define PKG_USING_NETUTILS_LATEST_VERSION
 #define PKG_NETUTILS_VER_NUM 0x99999
+#define PKG_USING_AT_DEVICE
+#define PKG_USING_AT_DEVICE_LATEST_VERSION
+#define PKG_AT_DEVICE_VER_NUM 0x99999
 
 /* IoT Cloud */
 
@@ -538,6 +541,14 @@
 
 /* Board extended module Drivers */
 
+#define AT_DEVICE_USING_ML307R
+#define AT_USING_RNDIS
+#define AT_DEVICE_ML307R_RNDIS
+#define AT_DEVICE_ML307R_SAMPLE
+#define ML307R_SAMPLE_POWER_PIN 51
+#define ML307R_SAMPLE_STATUS_PIN -1
+#define ML307R_SAMPLE_CLIENT_NAME "uart5"
+#define ML307R_SAMPLE_RECV_BUFF_LEN 2048
 /* end of Board extended module Drivers */
 /* end of Hardware Drivers Config */
 

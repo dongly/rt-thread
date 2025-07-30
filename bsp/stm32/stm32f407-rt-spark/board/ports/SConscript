@@ -57,6 +57,12 @@ if GetDepend(['BSP_USING_AUDIO']):
 if GetDepend(['BSP_USING_AUDIO_RECORD']):
     src += Glob('audio/drv_mic.c')
 
+if GetDepend(['PKG_USING_AT_DEVICE']):
+    src += Glob('at_device/ml307r/at_device_ml307r.c')
+    src += Glob('at_device/ml307r/at_sample_ml307r.c')
+    # src += Glob('at_device/ml307r/ml307r.c')
+    path += [cwd + '/at_device/ml307r']
+
 CPPDEFINES = ['STM32F407xx']
 group = DefineGroup('Drivers', src, depend = [''], CPPPATH = path, CPPDEFINES = CPPDEFINES)
 

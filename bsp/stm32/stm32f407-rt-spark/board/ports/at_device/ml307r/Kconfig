@@ -1,0 +1,51 @@
+
+# ML307R AT device configuration
+menuconfig AT_DEVICE_USING_ML307R
+    bool "Gosuncn ML307R"
+    default n
+
+    config AT_USING_RNDIS
+        bool 
+        default n
+
+if AT_DEVICE_USING_ML307R
+
+    config AT_DEVICE_ML307R_INIT_ASYN
+        bool "Enable initialize by thread"
+        default n
+
+    config AT_DEVICE_ML307R_SOCKET
+        bool "Enable ML307R at socket"
+        select AT_USING_SOCKET
+        default n
+
+    config AT_DEVICE_ML307R_RNDIS
+        bool "Enable ML307R RNDIS"
+        select AT_USING_RNDIS
+        default y
+  
+    config AT_DEVICE_ML307R_SAMPLE
+        bool "Enable sample"
+        default y
+
+    if AT_DEVICE_ML307R_SAMPLE
+
+        config ML307R_SAMPLE_POWER_PIN
+            int "Power pin"
+            default -1
+
+        config ML307R_SAMPLE_STATUS_PIN
+            int "Power status pin"
+            default -1
+
+        config ML307R_SAMPLE_CLIENT_NAME
+            string "AT client device name"
+            default "uart5"
+
+        config ML307R_SAMPLE_RECV_BUFF_LEN
+            int "The maximum length of receive line buffer"
+            default 2048
+
+    endif
+
+endif
