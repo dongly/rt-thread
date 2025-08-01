@@ -1,5 +1,6 @@
 #include "board.h"
 #include "lwip/tcpip.h"
+#include "rtdef.h"
 #include "usbh_core.h"
 #include <rtthread.h>
 
@@ -10,4 +11,4 @@ int usb_init(void)
     usbh_initialize(0, USB_OTG_HS_PERIPH_BASE);
     return RT_EOK;
 }
-INIT_APP_EXPORT(usb_init);
+INIT_ENV_EXPORT(usb_init);
