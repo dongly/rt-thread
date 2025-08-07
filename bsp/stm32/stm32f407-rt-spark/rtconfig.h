@@ -65,7 +65,7 @@
 
 /* end of rt_strnlen options */
 /* end of klibc options */
-#define RT_NAME_MAX 8
+#define RT_NAME_MAX 16
 #define RT_CPUS_NR 1
 #define RT_ALIGN_SIZE 8
 #define RT_THREAD_PRIORITY_32
@@ -74,12 +74,14 @@
 #define RT_USING_OVERFLOW_CHECK
 #define RT_USING_HOOK
 #define RT_HOOK_USING_FUNC_PTR
+#define RT_USING_HOOKLIST
 #define RT_USING_IDLE_HOOK
 #define RT_IDLE_HOOK_LIST_SIZE 4
 #define IDLE_THREAD_STACK_SIZE 2048
 #define RT_USING_TIMER_SOFT
 #define RT_TIMER_THREAD_PRIO 4
 #define RT_TIMER_THREAD_STACK_SIZE 2048
+#define RT_USING_CPU_USAGE_TRACER
 
 /* kservice options */
 
@@ -166,7 +168,15 @@
 #define RT_CHERRYUSB_HOST_DWC2_ST
 #define RT_CHERRYUSB_HOST_CDC_RNDIS
 #define CONFIG_USBHOST_PLATFORM_CDC_RNDIS
+#define CONFIG_USBHOST_PSC_PRIO 0
+#define CONFIG_USBHOST_PSC_STACKSIZE 4096
+#define CONFIG_USBHOST_REQUEST_BUFFER_LEN 512
+#define CONFIG_USBHOST_CONTROL_TRANSFER_TIMEOUT 500
 #define RT_LWIP_PBUF_POOL_BUFSIZE 1600
+
+/* Select USB host template, please select class driver first */
+
+/* end of Select USB host template, please select class driver first */
 /* end of Device Drivers */
 
 /* C/C++ and POSIX layer */
@@ -371,6 +381,44 @@
 
 /* tools packages */
 
+#define PKG_USING_SYSTEMVIEW
+#define PKG_SYSVIEW_APP_NAME "RT-Thread Trace"
+#define PKG_SYSVIEW_DEVICE_NAME "Cortex-M"
+#define PKG_SYSVIEW_TIMESTAMP_FREQ 0
+#define PKG_SYSVIEW_CPU_FREQ 0
+#define PKG_SYSVIEW_RAM_BASE 0x20000000
+#define PKG_SYSVIEW_EVENTID_OFFSET 32
+#define PKG_SYSVIEW_USE_CYCCNT_TIMESTAMP
+#define PKG_SYSVIEW_SYSDESC0 "I#15=SysTick"
+#define PKG_SYSVIEW_SYSDESC1 ""
+#define PKG_SYSVIEW_SYSDESC2 ""
+
+/* Segger RTT configuration */
+
+#define PKG_SEGGER_RTT_MAX_NUM_UP_BUFFERS 3
+#define PKG_SEGGER_RTT_MAX_NUM_DOWN_BUFFERS 3
+#define PKG_SEGGER_RTT_BUFFER_SIZE_UP 1024
+#define PKG_SEGGER_RTT_BUFFER_SIZE_DOWN 16
+#define PKG_SEGGER_RTT_PRINTF_BUFFER_SIZE 64
+#define PKG_SEGGER_RTT_AS_SERIAL_DEVICE
+#define PKG_SERIAL_DEVICE_NAME "segger"
+#define PKG_SEGGER_RTT_MODE_ENABLE_NO_BLOCK_SKIP
+#define PKG_SEGGER_RTT_MAX_INTERRUPT_PRIORITY 0x20
+/* end of Segger RTT configuration */
+
+/* SystemView buffer configuration */
+
+#define PKG_SEGGER_SYSVIEW_RTT_BUFFER_SIZE 4096
+#define PKG_SEGGER_SYSVIEW_RTT_CHANNEL 1
+#define PKG_SEGGER_SYSVIEW_USE_STATIC_BUFFER
+/* end of SystemView buffer configuration */
+
+/* SystemView Id configuration */
+
+#define PKG_SEGGER_SYSVIEW_ID_BASE 0x10000000
+#define PKG_SEGGER_SYSVIEW_ID_SHIFT 2
+/* end of SystemView Id configuration */
+#define PKG_USING_SYSTEMVIEW_LATEST_VERSION
 /* end of tools packages */
 
 /* system packages */
