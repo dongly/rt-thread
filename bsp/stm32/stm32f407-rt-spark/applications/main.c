@@ -99,7 +99,7 @@ int main(void)
 
     // usbh_initialize(0, USB_OTG_HS_PERIPH_BASE);
 
-    demo_init();
+    // demo_init();
     while (1)
     {
         rt_pin_write(GPIO_LED_R, PIN_HIGH);

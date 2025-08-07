@@ -143,7 +143,21 @@
 
 /* DFS: device virtual file system */
 
+#define RT_USING_DFS
+#define DFS_USING_POSIX
+#define DFS_USING_WORKDIR
+#define DFS_FD_MAX 16
+#define RT_USING_DFS_V1
+#define DFS_FILESYSTEMS_MAX 4
+#define DFS_FILESYSTEM_TYPES_MAX 4
+#define RT_USING_DFS_DEVFS
+#define RT_USING_DFS_ROMFS
 /* end of DFS: device virtual file system */
+#define RT_USING_FAL
+#define FAL_USING_DEBUG
+#define FAL_PART_HAS_TABLE_CFG
+#define FAL_USING_SFUD_PORT
+#define FAL_USING_NOR_FLASH_DEV_NAME "norflash0"
 
 /* Device Drivers */
 
@@ -159,8 +173,14 @@
 #define RT_USING_I2C
 #define RT_USING_I2C_BITOPS
 #define RT_USING_PWM
+#define RT_USING_MTD_NOR
 #define RT_USING_RTC
 #define RT_USING_SOFT_RTC
+#define RT_USING_SPI
+#define RT_USING_SFUD
+#define RT_SFUD_USING_SFDP
+#define RT_SFUD_USING_FLASH_INFO_TABLE
+#define RT_SFUD_SPI_MAX_HZ 50000000
 #define RT_USING_WDT
 #define RT_USING_PIN
 #define RT_USING_CHERRYUSB
@@ -168,15 +188,7 @@
 #define RT_CHERRYUSB_HOST_DWC2_ST
 #define RT_CHERRYUSB_HOST_CDC_RNDIS
 #define CONFIG_USBHOST_PLATFORM_CDC_RNDIS
-#define CONFIG_USBHOST_PSC_PRIO 0
-#define CONFIG_USBHOST_PSC_STACKSIZE 4096
-#define CONFIG_USBHOST_REQUEST_BUFFER_LEN 512
-#define CONFIG_USBHOST_CONTROL_TRANSFER_TIMEOUT 500
 #define RT_LWIP_PBUF_POOL_BUFSIZE 1600
-
-/* Select USB host template, please select class driver first */
-
-/* end of Select USB host template, please select class driver first */
 /* end of Device Drivers */
 
 /* C/C++ and POSIX layer */
@@ -194,6 +206,7 @@
 
 /* POSIX (Portable Operating System Interface) layer */
 
+#define RT_USING_POSIX_FS
 
 /* Interprocess Communication (IPC) */
 
@@ -213,7 +226,7 @@
 
 #define SAL_USING_LWIP
 /* end of Docking with protocol stacks */
-#define SAL_SOCKETS_NUM 16
+#define SAL_USING_POSIX
 #define RT_USING_NETDEV
 #define NETDEV_USING_IFCONFIG
 #define NETDEV_USING_PING
@@ -311,6 +324,12 @@
 
 /* IoT - internet of things */
 
+#define PKG_USING_WEBCLIENT
+#define WEBCLIENT_USING_SAMPLES
+#define WEBCLIENT_USING_FILE_DOWMLOAD
+#define WEBCLIENT_NOT_USE_TLS
+#define PKG_USING_WEBCLIENT_LATEST_VERSION
+#define PKG_WEBCLIENT_VER_NUM 0x99999
 
 /* Wi-Fi */
 
@@ -411,6 +430,7 @@
 #define PKG_SEGGER_SYSVIEW_RTT_BUFFER_SIZE 4096
 #define PKG_SEGGER_SYSVIEW_RTT_CHANNEL 1
 #define PKG_SEGGER_SYSVIEW_USE_STATIC_BUFFER
+#define PKG_SEGGER_SYSVIEW_POST_MORTEM_MODE
 /* end of SystemView buffer configuration */
 
 /* SystemView Id configuration */
@@ -440,6 +460,17 @@
 /* Micrium: Micrium software products porting for RT-Thread */
 
 /* end of Micrium: Micrium software products porting for RT-Thread */
+#define FAL_DEBUG_CONFIG
+#define PKG_USING_LITTLEFS
+#define PKG_USING_LITTLEFS_LATEST_VERSION
+#define LFS_READ_SIZE 256
+#define LFS_PROG_SIZE 256
+#define LFS_BLOCK_SIZE 4096
+#define LFS_CACHE_SIZE 256
+#define LFS_BLOCK_CYCLES -1
+#define LFS_THREADSAFE
+#define LFS_LOOKAHEAD_MAX 128
+#define RT_DEF_LFS_DRIVERS 1
 /* end of system packages */
 
 /* peripheral libraries and drivers */
@@ -572,6 +603,12 @@
 /* Onboard Peripheral Drivers */
 
 #define BSP_USING_USB_TO_USART
+#define BSP_USING_SPI_FLASH
+#define BSP_USING_FS
+#define BSP_USING_FLASH_FATFS
+#define BSP_USING_FLASH_FS_AUTO_MOUNT
+#define BSP_USING_FAL
+#define BSP_USING_BOOTLOADER
 /* end of Onboard Peripheral Drivers */
 
 /* On-chip Peripheral Drivers */
@@ -585,6 +622,9 @@
 #define BSP_UART5_TX_USING_DMA
 #define BSP_USING_UART6
 #define BSP_UART6_RX_USING_DMA
+#define BSP_USING_ON_CHIP_FLASH
+#define BSP_USING_SPI
+#define BSP_USING_SPI2
 /* end of On-chip Peripheral Drivers */
 
 /* Board extended module Drivers */

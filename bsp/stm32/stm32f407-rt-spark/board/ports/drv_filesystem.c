@@ -11,9 +11,10 @@
  */
 
 #include <rtthread.h>
-#include <dfs_romfs.h>
-#include <dfs_fs.h>
+#include "fal.h"
 #include <dfs_file.h>
+#include <dfs_fs.h>
+#include <dfs_romfs.h>
 
 #if DFS_FILESYSTEMS_MAX < 4
 #error "Please define DFS_FILESYSTEMS_MAX more than 4"
@@ -54,19 +55,16 @@ static int onboard_fal_mount(void)
     extern int fal_init(void);
     extern struct rt_device *fal_blk_device_create(const char *parition_name);
     fal_init();
-    /* 在 spi flash 中名为 "filesystem" 的分区上创建一个块设备 */
-    struct rt_device *flash_dev = fal_blk_device_create(FS_PARTITION_NAME);
-    if (flash_dev == NULL)
+
+     struct rt_device *mtd_dev = fal_mtd_nor_device_create(FS_PARTITION_NAME);
+    if (!mtd_dev)
     {
-        LOG_E("Can't create a block device on '%s' partition.", FS_PARTITION_NAME);
-    }
-    else
-    {
-        LOG_D("Create a block device on the %s partition of flash successful.", FS_PARTITION_NAME);
+        LOG_E("Can't create a mtd device on '%s' partition.", FS_PARTITION_NAME);
+        return -RT_ERROR;
     }
 
     /* 挂载 spi flash 中名为 "filesystem" 的分区上的文件系统 */
-    if (dfs_mount(flash_dev->parent.name, "/fal", "elm", 0, 0) == 0)
+    if (dfs_mount(mtd_dev->parent.name, "/fal", "lfs", 0, 0) == 0)
     {
         LOG_I("Filesystem initialized!");
     }
