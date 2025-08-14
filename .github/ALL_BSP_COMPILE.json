@@ -20,7 +20,8 @@
       "RTT_BSP": "RTduino_Arduino Libraries (Raspberry Pico)",
       "RTT_TOOL_CHAIN": "sourcery-arm",
       "SUB_RTT_BSP": [
-        "raspberry-pico"
+        "raspberry-pico/RP2040",
+        "raspberry-pico/RP2350"
       ]
     },
     {
@@ -489,6 +490,13 @@
       "RTT_TOOL_CHAIN": "sourcery-Xuantie-900-gcc-linux-musl",
       "SUB_RTT_BSP": [
         "xuantie/virt64/c906"
+      ]
+    },
+    {
+      "RTT_BSP": "allwinner-smart",
+      "RTT_TOOL_CHAIN": "sourcery-riscv64-general-toolchain",
+      "SUB_RTT_BSP": [
+        "allwinner/d1s"
       ]
     }
   ]
