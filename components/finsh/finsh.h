@@ -28,7 +28,7 @@
 #define FINSH_DESC(cmd, desc)
 #endif
 
-typedef long (*syscall_func)(void);
+typedef int (*cmd_function_t)(int argc, char **argv);
 #ifdef FINSH_USING_SYMTAB
 
 #ifdef __TI_COMPILER_VERSION__
@@ -53,7 +53,7 @@ typedef long (*syscall_func)(void);
                     __fsym_##cmd##_name,    \
                     FINSH_DESC(cmd, desc)   \
                     FINSH_COND(opt)         \
-                    (syscall_func)&name     \
+                    (cmd_function_t)&name   \
                 };
 #pragma comment(linker, "/merge:FSymTab=mytext")
 
@@ -72,7 +72,7 @@ typedef long (*syscall_func)(void);
                     __fsym_##cmd##_name,    \
                     FINSH_DESC(cmd, desc)   \
                     FINSH_COND(opt)         \
-                    (syscall_func)&name     \
+                    (cmd_function_t)&name   \
                 };
 
 #else
@@ -84,7 +84,7 @@ typedef long (*syscall_func)(void);
                     __fsym_##cmd##_name,    \
                     FINSH_DESC(cmd, desc)   \
                     FINSH_COND(opt)         \
-                    (syscall_func)&name     \
+                    (cmd_function_t)&name   \
                 };
 
 #endif  /* _MSC_VER */
@@ -189,7 +189,7 @@ struct finsh_syscall
 #ifdef FINSH_USING_OPTION_COMPLETION
     struct msh_cmd_opt *opt;
 #endif
-    syscall_func func;      /* the function address of system call */
+    cmd_function_t func;      /* the function address of system call */
 };
 
 /* system call item */

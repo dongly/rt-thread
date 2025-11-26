@@ -30,8 +30,6 @@
 #include <dlmodule.h>
 #endif /* RT_USING_MODULE */
 
-typedef int (*cmd_function_t)(int argc, char **argv);
-
 static int msh_help(int argc, char **argv)
 {
     rt_kprintf("RT-Thread shell commands:\n");
