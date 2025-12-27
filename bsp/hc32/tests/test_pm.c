@@ -445,8 +445,10 @@ static void _vbat_init(void)
     pm_dbg("vbat init success\n");
 }
 
-int pm_sample_init(void)
+static int pm_sample_init(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     pm_dbg("pm_sample_init\n\n");
 
     _keycnt_cmd_init_after_power_on();

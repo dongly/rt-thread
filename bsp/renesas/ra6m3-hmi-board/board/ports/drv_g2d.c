@@ -121,8 +121,10 @@ static int32_t _CircleAA(int32_t x0, int32_t y0, int32_t r, int32_t w)
     return ret;
 }
 
-int G2D_Test_Draw_Circle()
+static int G2D_Test_Draw_Circle(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     _CircleAA(240, 100, 50, 10);
 
     return 0;

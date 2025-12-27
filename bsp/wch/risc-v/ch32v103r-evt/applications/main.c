@@ -52,8 +52,10 @@ int main(void)
 }
 
 /* led cmd  */
-int led(void)
+static int led(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_uint8_t count;
 
     rt_pin_mode(LED0_PIN, PIN_MODE_OUTPUT);

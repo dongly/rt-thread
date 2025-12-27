@@ -105,7 +105,7 @@ write_memory(uint8_t *addr, int len, int iosize, unsigned long value)
     }
 }
 
-int io_mem(int argc, char **argv)
+static int io_mem(int argc, char **argv)
 {
     int req_len = 0, opt;
     uint8_t *real_io;

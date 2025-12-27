@@ -656,8 +656,10 @@ INIT_ENV_EXPORT(graphic_device_init);
 
 #ifdef DRV_DEBUG
 #ifdef FINSH_USING_MSH
-int lcd_dsi_test()
+static int lcd_dsi_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     struct drv_lcd_dsi_device *lcd;
     lcd = (struct drv_lcd_dsi_device *)rt_device_find("lcd_dsi");
     rt_uint8_t *ptr = lcd->lcd_info.framebuffer;
@@ -696,12 +698,15 @@ int lcd_dsi_test()
         rt_device_control(&lcd->parent, RTGRAPHIC_CTRL_RECT_UPDATE, RT_NULL);
         rt_thread_mdelay(1000);
     }
+    return 0;
 }
 MSH_CMD_EXPORT(lcd_dsi_test, lcd_dsi_test);
 
 //draw a line in screen
 void line()
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     struct drv_lcd_dsi_device *lcd;
     lcd = (struct drv_lcd_dsi_device *)rt_device_find("lcd_dsi");
     rt_uint8_t *ptr = lcd->lcd_info.framebuffer;
@@ -717,6 +722,7 @@ void line()
         rt_device_control(&lcd->parent, RTGRAPHIC_CTRL_RECT_UPDATE, RT_NULL);
 
 
+    return 0;
 }
 MSH_CMD_EXPORT(line, line);
 

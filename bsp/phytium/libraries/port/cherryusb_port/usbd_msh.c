@@ -13,6 +13,8 @@ void msc_ram_init(uint8_t busid, uintptr_t reg_base);
 
 static int usb_device_init(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     uint8_t busid = 0;
     msc_ram_init(busid, usb_dc_get_register_base(busid));
     return 0;

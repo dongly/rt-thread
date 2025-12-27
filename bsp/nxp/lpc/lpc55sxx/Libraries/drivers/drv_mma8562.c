@@ -75,8 +75,10 @@ rt_err_t mma8562_write_reg(rt_uint8_t reg, rt_uint8_t data)
 #include <finsh.h>
 #include <rtdevice.h>
 
-void get_mma8562(uint8_t data)
+static int get_mma8562(uint8_t data)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     volatile acceleration_t accel;
 
     uint8_t ucVal1 = 0;
@@ -101,6 +103,7 @@ void get_mma8562(uint8_t data)
     accel.z = ucVal1*256 +ucVal2;
 
     rt_kprintf("*** MMA8562 X %d, Y %d, Z %d\r\n", (accel.x), (accel.y), (accel.z) );
+    return 0;
 }
 MSH_CMD_EXPORT(get_mma8562, get mma8562. e.g: get_mma8562(0))
 #endif

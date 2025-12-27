@@ -73,8 +73,10 @@ static int fal_flash_erase(long offset, size_t size)
     return 0;
 }
 
-int fal_ops_test(void)
+static int fal_ops_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     int result;
     const struct fal_partition *part_dev = fal_partition_find("param");
     uint8_t *data = rt_malloc(256);

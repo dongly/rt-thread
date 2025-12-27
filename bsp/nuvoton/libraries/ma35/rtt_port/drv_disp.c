@@ -367,9 +367,12 @@ int rt_hw_disp_init(void)
 }
 INIT_DEVICE_EXPORT(rt_hw_disp_init);
 
-static void lcd_show_video_layer(void)
+static int lcd_show_video_layer(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_device_open(&nu_fbdev[eLayer_Video].dev, RT_DEVICE_FLAG_RDWR);
+    return 0;
 }
 MSH_CMD_EXPORT(lcd_show_video_layer, show video layer);
 
@@ -433,6 +436,8 @@ static void lcd_fill_layer_color(void)
 #endif
             idx++)
     {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
         psDispLayer = &nu_fbdev[idx];
         if (psDispLayer->info.framebuffer != RT_NULL)
         {
@@ -446,6 +451,7 @@ static void lcd_fill_layer_color(void)
                 rt_memcpy((void *)&fbmem_start[i], &color, (psDispLayer->info.bits_per_pixel / 8));
             }
         }
+    return 0;
     }
 }
 MSH_CMD_EXPORT(lcd_fill_layer_color, fill random color on overlay layer);

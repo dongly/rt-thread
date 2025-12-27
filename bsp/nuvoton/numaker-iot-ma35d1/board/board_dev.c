@@ -305,8 +305,11 @@ static S_NU_REG s_NuReg_arr[] =
     {0}
 };
 
-void nu_check_register(void)
+static int nu_check_register(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     nu_sys_check_register(&s_NuReg_arr[0]);
+    return 0;
 }
 MSH_CMD_EXPORT(nu_check_register, Check registers);

@@ -148,11 +148,14 @@ void rt_hw_board_init(void)
     rt_console_set_device(RT_CONSOLE_DEVICE_NAME);
 }
 
-void rt_hw_cpu_reset(void)
+static int rt_hw_cpu_reset(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     unsigned long prcm_base = AM33XX_PRCM_REGS;
 
     REG32(PRM_DEVICE(prcm_base)) = 0x1;
     RT_ASSERT(0);
+    return 0;
 }
 MSH_CMD_EXPORT_ALIAS(rt_hw_cpu_reset, reboot, reboot the cpu);

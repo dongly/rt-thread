@@ -118,7 +118,7 @@ int rs485_init(void)
 }
 // INIT_DEVICE_EXPORT(rs485_init);
 
-void rs485_test(int argc, void **argv)
+static int rs485_test(int argc, static int **argv)
 {
     char *str;
     if (argc == 1)
@@ -133,6 +133,7 @@ void rs485_test(int argc, void **argv)
             rs485_send_data(str, rt_strnlen(str, 32));
         }
     }
+    return 0;
 }
 MSH_CMD_EXPORT(rs485_test, test rs485 transmission);
 

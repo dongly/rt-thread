@@ -36,8 +36,10 @@ void key1_cb(void *args)
 {
     rt_kprintf("key1 irq!\n");
 }
-static int pin_sample(int argc, char *argv[])
+static int pin_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_pin_mode(KEY1_PIN, PIN_IRQ_MODE_FALLING);
     rt_pin_attach_irq(KEY1_PIN, PIN_IRQ_MODE_FALLING, key1_cb, RT_NULL);
     rt_pin_irq_enable(KEY1_PIN, PIN_IRQ_ENABLE);
@@ -55,6 +57,8 @@ MSH_CMD_EXPORT(pin_sample, pin sample);
 
 static int adc_vol_sample(int argc, char *argv[])
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_adc_device_t adc_dev;
     rt_uint32_t value, vol;
     rt_err_t ret = RT_EOK;
@@ -89,6 +93,8 @@ MSH_CMD_EXPORT(adc_vol_sample, adc voltage convert sample);
 
 static int dac_vol_sample(int argc, char *argv[])
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_dac_device_t dac_dev;
     rt_uint32_t value, vol;
     rt_err_t ret = RT_EOK;
@@ -267,6 +273,8 @@ static int hwtimer_sample(int argc, char *argv[])
     hw_dev = rt_device_find(HWTIMER_DEV_NAME);
     if (hw_dev == RT_NULL)
     {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
         rt_kprintf("hwtimer sample run failed! can't find %s device!\n", HWTIMER_DEV_NAME);
         return -RT_ERROR;
     }
@@ -316,6 +324,8 @@ struct rt_device_pwm *pwm_dev; /* PWM设备句柄 */
 
 static int pwm_sample(int argc, char *argv[])
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_uint32_t period, pulse;
 
     period = 500000; /* 周期为0.5ms，单位为纳秒ns */
@@ -346,6 +356,8 @@ static int rtc_sample(int argc, char *argv[])
     ret = set_date(2000, 2, 28);
     if (ret != RT_EOK)
     {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
         rt_kprintf("set RTC date failed\n");
         return ret;
     }
@@ -665,11 +677,14 @@ static void crypto_sample(void)
     rt_uint32_t result = 0;
     struct hwcrypto_crc_cfg cfg =
         {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
             .last_val = 0x00000000,
             .poly = 0x04C11DB7,
             .width = 8,
             .xorout = 0x00000000, //不支持XOR
             .flags = 0,
+    return 0;
         };
 
     ctx = rt_hwcrypto_crc_create(rt_hwcrypto_dev_default(), HWCRYPTO_CRC_CRC32);
@@ -715,6 +730,8 @@ void thread1_entry(void *parameter)
         /* 如果分配成功 */
         if (ptr != RT_NULL)
         {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
             rt_kprintf("get memory :%d byte\n", (1 << i));
             /* 释放内存块 */
             rt_free(ptr);
@@ -812,6 +829,8 @@ static void gt9147_entry(void *parameter)
 static rt_err_t rx_callback(rt_device_t dev, rt_size_t size)
 {
     /* 关闭中断 */
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_device_control(dev, RT_TOUCH_CTRL_DISABLE_INT, RT_NULL);
     /* 释放信号量 */
     rt_sem_release(gt9147_sem);

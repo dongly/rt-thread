@@ -97,13 +97,16 @@ void rt_hw_board_init(void)
 #endif
 }
 
-void reboot(void)
+static int reboot(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     psci_system_reboot();
 
     void *cur_base = rt_ioremap((void *) CRU_BASE, 0x100);
     HWREG32(cur_base + 0x00D4) = 0xfdb9;
     HWREG32(cur_base + 0x00D8) = 0xeca8;
+    return 0;
 }
 MSH_CMD_EXPORT(reboot, reboot...);
 
@@ -116,9 +119,12 @@ MSH_CMD_EXPORT_ALIAS(print_cpu_id, cpuid, print_cpu_id);
 #ifdef RT_USING_AMP
 void start_cpu(int argc, char *argv[])
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_uint32_t status;
     status = rt_psci_cpu_on(0x3, (rt_uint64_t) 0x7A000000);
     rt_kprintf("arm_psci_cpu_on 0x%X\n", status);
+    return 0;
 }
 MSH_CMD_EXPORT(start_cpu, start_cpu);
 
@@ -150,7 +156,10 @@ void rt_hw_secondary_cpu_up(void)
 
     for (i = 1; i < RT_CPUS_NR; ++i)
     {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
         rt_psci_cpu_on(rt_cpu_mpidr_early[i], entry);
+    return 0;
     }
 }
 

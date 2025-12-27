@@ -71,8 +71,10 @@ int ac97_get_rate(void)
 
 #if 0
 #define AC97_DUMP(_v)    rt_kprintf("%32s:addr:0x%08x data:0x%08x\n", #_v, (_v), (aaci_ac97_read(_v)))
-int _ac97_reg_dump(int argc, char **argv)
+static int _ac97_reg_dump(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     AC97_DUMP(AC97_RESET);
     AC97_DUMP(AC97_MASTER);
     AC97_DUMP(AC97_HEADPHONE);

@@ -1092,8 +1092,10 @@ INIT_COMPONENT_EXPORT(drv_lcd_ili9488_hw_init);
 
 #ifdef DRV_DEBUG
 #ifdef FINSH_USING_MSH
-int ili9488_test()
+static int ili9488_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     struct drv_lcd_device *lcd;
     lcd = (struct drv_lcd_device *)rt_device_find("lcd");
     struct rt_device_rect_info rect_info = {0, 0, LCD_WIDTH, LCD_HEIGHT};
@@ -1160,6 +1162,7 @@ int ili9488_test()
         lcd->parent.control(&lcd->parent, RTGRAPHIC_CTRL_RECT_UPDATE, &rect_info);
         rt_thread_mdelay(1000);
     }
+    return 0;
 }
 MSH_CMD_EXPORT(ili9488_test, test ili9488 driver);
 #endif /* FINSH_USING_MSH */

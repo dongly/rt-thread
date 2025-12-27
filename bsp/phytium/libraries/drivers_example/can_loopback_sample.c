@@ -82,8 +82,10 @@ static void can1_rx_thread(void *parameter)
     }
 }
 
-rt_err_t can_loopback_sample()
+static int can_loopback_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     struct rt_can_msg msg = {0};
     rt_err_t res = RT_EOK;;
     rt_thread_t thread;

@@ -71,8 +71,10 @@ void dmalock_release(dmac_channel_number_t chn)
     rt_sem_release(&_dmac_host.sem);
 }
 
-static void dma_ch_info(int argc, char **argv)
+static int dma_ch_info(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     uint32_t cnt = 0;
 
     for (int i = 0; i < DMAC_CHANNEL_COUNT; i++)
@@ -86,5 +88,6 @@ static void dma_ch_info(int argc, char **argv)
 
     if(cnt == 0)
         rt_kprintf(" no dma_ch is using.\n");
+    return 0;
 }
 MSH_CMD_EXPORT(dma_ch_info, list dma channel informationn.);

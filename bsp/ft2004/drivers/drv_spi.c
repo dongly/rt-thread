@@ -409,8 +409,10 @@ static u32 ft2004_spi_readid_for_test(ft2004_manuid_t *pId)
     return ret;
 }
 
-static void spi_9f_s25fs_sample(int argc, char *argv[])
+static int spi_9f_s25fs_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     ft2004_manuid_t dev_id;
     u32 ret = ERR_SPI_OK;
     u32 delay = SPI_TIMEOUT * 10;
@@ -424,12 +426,15 @@ static void spi_9f_s25fs_sample(int argc, char *argv[])
     {
         rthw_spi_delay(10);
     }
+    return 0;
 }
 MSH_CMD_EXPORT(spi_9f_s25fs_sample, "spi s25fs cmd 9fH sample");
 
 static u8 read_buf[256];
 static void spi_5a_s25fs_sample(int argc, char *argv[])
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     u32 ret = ERR_SPI_OK;
     u32 delay = SPI_TIMEOUT * 10;
     u32 read_addr = 0x0000;
@@ -443,6 +448,7 @@ static void spi_5a_s25fs_sample(int argc, char *argv[])
     {
         rthw_spi_delay(10);
     }
+    return 0;
 }
 MSH_CMD_EXPORT(spi_5a_s25fs_sample, "spi s25fs cmd 5aH sample");
 

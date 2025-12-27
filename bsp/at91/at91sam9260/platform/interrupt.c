@@ -437,8 +437,10 @@ void list_irq(void)
 #include <finsh.h>
 
 #ifdef FINSH_USING_MSH
-int cmd_list_irq(int argc, char** argv)
+static int cmd_list_irq(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     list_irq();
     return 0;
 }

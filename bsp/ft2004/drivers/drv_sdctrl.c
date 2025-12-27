@@ -50,9 +50,12 @@ static rt_uint8_t cache_buf[SDCTR_BUFF_SIZE];
 
 static void rthw_sdctrl_send_command(ft_sdctrl_class_t *class_p, struct mmcsd_pkg *pkg);
 
-static void demo_dump_sdc(void)
+static int demo_dump_sdc(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     Ft_DumpHexWord((const rt_uint32_t *)(0x28207C00), 256);
+    return 0;
 }
 MSH_CMD_EXPORT_ALIAS(demo_dump_sdc, dump_sdc, output all dump_sdc);
 

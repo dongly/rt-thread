@@ -29,6 +29,8 @@
 */
 static int audio_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
 #define DEF_MAX_ARGV_NUM 8
 #define DEF_MAX_TEST_SECOND 5
 
@@ -91,6 +93,8 @@ static int audio_test(int argc, char **argv)
 
 static int audio_overnight(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
 #define DEF_MAX_TEST_SECOND 5
 
     struct wavrecord_info info;

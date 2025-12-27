@@ -116,8 +116,10 @@ int rt_hw_wdt_init(void)
 }
 INIT_DEVICE_EXPORT(rt_hw_wdt_init);
 
-void reboot(void)
+static int reboot(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     unsigned int r;
 
     rt_kprintf("reboot system...\n");
@@ -130,6 +132,7 @@ void reboot(void)
     PM_RSTC |= (PM_PASSWORD | PM_RSTC_WRCFG_FULL_RESET);
 
     while (1);
+    return 0;
 }
 MSH_CMD_EXPORT(reboot,reboot system...);
 #endif /*BSP_USING_WDT */

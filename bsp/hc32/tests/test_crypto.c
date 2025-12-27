@@ -254,7 +254,7 @@ static void hash_sha256_test(void)
 }
 #endif
 
-static int crypto_sample(int argc, char *argv[])
+static int crypto_sample(int argc, char **argv)
 {
     rt_err_t ret = RT_EOK;
 

@@ -302,7 +302,7 @@ void _show_usage(void)
     rt_kprintf(MSH_USAGE_CAN_SEND_MSG);
 }
 
-int can(int argc, char **argv)
+static int can(int argc, char **argv)
 {
     if (!strcmp(argv[1], "set_baud"))
     {
@@ -332,7 +332,7 @@ int can(int argc, char **argv)
 }
 MSH_CMD_EXPORT(can, can function configuration);
 
-int can_sample(int argc, char **argv)
+static int can_sample(int argc, char **argv)
 {
     char can_name[RT_NAME_MAX];
     char sem_name[RT_NAME_MAX] = "can_sem";

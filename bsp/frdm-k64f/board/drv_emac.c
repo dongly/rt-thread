@@ -406,8 +406,10 @@ INIT_DEVICE_EXPORT(drv_emac_hw_init);
 
 #ifdef DRV_EMAC_DEBUG
 
-long k64_dump_tx_bd(void)
+static int k64_dump_tx_bd(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     int i;
 
     enet_tx_bd_struct_t *txbd = _emac.TxBuffDescrip;
@@ -424,6 +426,8 @@ MSH_CMD_EXPORT(k64_dump_tx_bd, dump all receive buffer descriptor);
 
 long k64_dump_rx_bd(void)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     int i;
     enet_rx_bd_struct_t *rxbd = _emac.RxBuffDescrip;
 

@@ -28,7 +28,7 @@ void rt_hw_cpu_reset(void)
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 
-static void reboot(uint8_t argc, char **argv)
+static int reboot(uint8_t argc, char **argv)
 {
     if (argc >= 2 && !strncmp(argv[1], "loader", 6))
     {
@@ -36,6 +36,7 @@ static void reboot(uint8_t argc, char **argv)
     }
 
     rt_hw_cpu_reset();
+    return 0;
 }
 MSH_CMD_EXPORT(reboot, Reboot System);
 #endif /* RT_USING_FINSH */

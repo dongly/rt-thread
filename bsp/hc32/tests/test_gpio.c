@@ -58,9 +58,11 @@ void led_control(void *args)
     }
 }
 
-static void pin_sample(void)
+static int pin_sample(int argc, char **argv)
 {
     /* LED引脚为输出模式 */
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_pin_mode(LED1_PIN_NUM, PIN_MODE_OUTPUT);
     /* 默认高电平 */
     rt_pin_write(LED1_PIN_NUM, PIN_HIGH);
@@ -73,6 +75,7 @@ static void pin_sample(void)
     rt_pin_attach_irq(KEY1_PIN_NUM, PIN_IRQ_MODE_RISING_FALLING, led_control, RT_NULL);
     /* 使能中断 */
     rt_pin_irq_enable(KEY1_PIN_NUM, PIN_IRQ_ENABLE);
+    return 0;
 }
 /* 导出到 msh 命令列表中 */
 MSH_CMD_EXPORT(pin_sample, pin sample);

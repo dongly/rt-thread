@@ -168,7 +168,7 @@ int drv_pm_hw_init(void)
 }
 INIT_BOARD_EXPORT(drv_pm_hw_init);
 
-static int pwr_sample(int argc, char *argv[])
+static int pwr_sample(int argc, char **argv)
 {
     if (argc > 1)
     {

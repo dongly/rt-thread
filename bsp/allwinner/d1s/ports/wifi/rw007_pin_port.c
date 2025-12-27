@@ -47,14 +47,17 @@ static void rw007_gpio_init(void)
     rt_pin_mode(INT_BUSY_PIN, PIN_MODE_INPUT_PULLUP);
 }
 
-static void _rw007_int(int argc, char *args[])
+static int _rw007_int(int argc, char *args[])
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     int v;
 
     v = atoi(args[1]);
 
     rt_pin_mode(RESET_PIN, PIN_MODE_OUTPUT);
     rt_pin_write(RESET_PIN, v);
+    return 0;
 }
 MSH_CMD_EXPORT_ALIAS(_rw007_int, _rw007_int, rw007 int pin);
 
@@ -87,7 +90,10 @@ void wifi_init_thread_entry(void *p)
 
     if (rw007_sn_get(sn_version) != RT_EOK)
     {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
         LOG_E("rw007 get sn fail !!!");
+    return 0;
     }
     LOG_I("rw007  sn: [%s]", sn_version);
 

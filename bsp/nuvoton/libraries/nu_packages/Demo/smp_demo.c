@@ -35,14 +35,17 @@ void happy_counter(void *pdata)
     }
 }
 
-void go_happy_counter(void)
+static int go_happy_counter(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_thread_t tid = rt_thread_create("cpu-1", happy_counter, RT_NULL,  2048, 10, 20);
     RT_ASSERT(tid != RT_NULL);
 
     rt_thread_control(tid, RT_THREAD_CTRL_BIND_CPU, (void *)1);
 
     rt_thread_startup(tid);
+    return 0;
 }
 MSH_CMD_EXPORT(go_happy_counter, go happy counter);
 
@@ -124,6 +127,8 @@ static void happy_mutex(void *parameter)
     *pu32Counter = 0;
     while (1)
     {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
         ret = rt_mutex_take(psMutex, RT_WAITING_FOREVER);
         if (ret != RT_EOK)
             continue;
@@ -143,11 +148,14 @@ static void happy_mutex(void *parameter)
 #endif /* RT_USING_SMP */
 
         rt_mutex_release(psMutex);
+    return 0;
     }
 }
 
 static int go_happy_mutex(void)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_thread_t thread;
     rt_mutex_t  sem = rt_mutex_create("mutexsem", RT_IPC_FLAG_PRIO);
 

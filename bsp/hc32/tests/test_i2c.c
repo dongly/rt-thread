@@ -259,12 +259,15 @@ void tca9539_test(void)
 }
 #endif
 
-static void i2c_sample(int argc, char *argv[])
+static int i2c_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     eeprom_test();
 #if defined(HC32F472) || defined(HC32F4A0) || defined(HC32F448) || defined(HC32F4A8)
     tca9539_test();
 #endif
+    return 0;
 }
 
 MSH_CMD_EXPORT(i2c_sample, i2c sample);

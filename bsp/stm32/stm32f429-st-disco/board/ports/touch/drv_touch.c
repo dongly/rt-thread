@@ -194,8 +194,10 @@ int32_t touch_get_state(struct touch_state *state)
     return 0;
 }
 
-void touch_show_state()
+static int touch_show_state(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     int16_t x;
     int16_t y;
     struct touch_state ts;
@@ -204,6 +206,7 @@ void touch_show_state()
     y = (-461 + ts.y) / 10.5;
     rt_kprintf("[drv_touch] touch_show_state, x: %d, y: %d, pressed: %d, padding: %d\n", ts.x , ts.y, ts.pressed, ts.padding);
     rt_kprintf("[drv_touch] touch_show_state, phy x: %d, phy y: %d\n", x , y);
+    return 0;
 }
 MSH_CMD_EXPORT(touch_show_state, show screen coordinate in touching);
 

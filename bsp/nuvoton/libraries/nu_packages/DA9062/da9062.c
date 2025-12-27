@@ -222,8 +222,11 @@ exit_rt_hw_da9062_init:
 
 static int da9062_dump(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_hw_da9062_init("i2c0");
     da9062_regs_dump();
+    return 0;
 }
 
 #ifdef FINSH_USING_MSH

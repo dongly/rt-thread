@@ -282,8 +282,10 @@ E_SYS_USB0_ID nu_sys_usb0_role(void)
 #include <finsh.h>
 
 #ifdef FINSH_USING_MSH
-int cmd_reset(int argc, char **argv)
+static int cmd_reset(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_hw_cpu_reset();
     return 0;
 }
@@ -291,6 +293,8 @@ MSH_CMD_EXPORT_ALIAS(cmd_reset, reset, restart the system);
 
 int cmd_shutdown(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_hw_cpu_shutdown();
     return 0;
 }
@@ -321,6 +325,8 @@ int list_interrupt(int argc, char **argv)
 
     for (i = SYS_MIN_INT_SOURCE; i <= SYS_MAX_INT_SOURCE; i++)
     {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
         if (irq_desc[i].handler != rt_hw_interrupt_dummy_handler)
         {
             rt_kprintf("[%d] %s: %d\n", i, irq_desc[i].name, irq_desc[i].counter);

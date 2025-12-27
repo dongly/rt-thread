@@ -286,7 +286,7 @@ uint32_t whc_devmem_read(void *pvaddr)
 }
 RTM_EXPORT(whc_devmem_read);
 
-void whc_devmem(int argc, char *argv[])
+static int whc_devmem(int argc, char **argv)
 {
     volatile unsigned int u32Addr;
     unsigned int value = 0, mode = 0;

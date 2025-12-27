@@ -415,8 +415,10 @@ rt_weak void ra8_mipi_lcd_init(void)
 }
 #endif
 
-int lcd_test(void)
+static int lcd_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     struct drv_lcd_device *lcd;
     struct rt_device_rect_info rect_info;
     rect_info.x = 0;

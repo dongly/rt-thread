@@ -411,8 +411,10 @@ int test_rtc(void)
     return RT_EOK;
 }
 
-void test_device(int argc, char**argv)
+static int test_device(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     if (0 == strcmp(argv[1],"smp"))
     {
         test_cpusmp();

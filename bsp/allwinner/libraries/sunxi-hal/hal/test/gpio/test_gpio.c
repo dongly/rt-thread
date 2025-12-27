@@ -46,8 +46,10 @@ static irqreturn_t gpio_irq_test(int unused, void *data)
     return 0;
 }
 
-int cmd_test_gpio(int argc, char **argv)
+static int cmd_test_gpio(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     uint32_t irq;
     int ret = 0;
     gpio_pull_status_t pull_state;

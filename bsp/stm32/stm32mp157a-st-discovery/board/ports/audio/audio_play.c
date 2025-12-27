@@ -58,7 +58,7 @@ struct wav_info
     struct DATA_BLOCK_DEF  data_block;
 };
 
-int wavplay_sample(int argc, char **argv)
+static int wavplay_sample(int argc, char **argv)
 {
     int fd = -1;
     uint8_t *buffer = NULL;
@@ -185,7 +185,7 @@ static void wavheader_init(struct wav_header *header, int sample_rate, int chann
     header->data_datasize = datasize;
 }
 
-int wavrecord_sample(int argc, char **argv)
+static int wavrecord_sample(int argc, char **argv)
 {
     int fd = -1;
     uint8_t *buffer = NULL;

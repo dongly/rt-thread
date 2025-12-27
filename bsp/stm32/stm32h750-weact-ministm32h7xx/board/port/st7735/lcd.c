@@ -263,6 +263,8 @@ INIT_COMPONENT_EXPORT(LCD_Init);
 #ifdef FINSH_USING_MSH
 static int show_logo(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     uint8_t text[20];
 
     LCD_SetBrightness(MAX_BRIGHTNESS);

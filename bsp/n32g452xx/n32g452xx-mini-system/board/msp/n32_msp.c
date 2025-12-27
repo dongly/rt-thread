@@ -854,8 +854,10 @@ MSH_CMD_EXPORT(uart_test, uart_test)
 #endif
 #define REFER_VOLTAGE       3300
 #define CONVERT_BITS        (1 << 12)
-static int adc_vol_sample(int argc, char *argv[])
+static int adc_vol_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_adc_device_t adc_dev;
     rt_uint32_t value, vol;
     rt_err_t ret = RT_EOK;
@@ -934,6 +936,8 @@ static int hwtimer_init(const char *name)
 
 static int hwtimer_sample(int argc, char *argv[])
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
 #ifdef BSP_USING_HWTIM6
     hwtimer_init("timer6");
 #endif

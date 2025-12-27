@@ -16,7 +16,7 @@
 
 #include <at_device.h>
 
-static void at_wifi_set(int argc, char **argv)
+static int at_wifi_set(int argc, char **argv)
 {
     struct at_device_ssid_pwd sATDConf;
     struct at_device *at_dev = RT_NULL;

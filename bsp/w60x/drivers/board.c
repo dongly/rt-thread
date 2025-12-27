@@ -246,10 +246,13 @@ void rt_hw_us_delay(rt_uint32_t us)
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
-static void reboot(uint8_t argc, char **argv)
+static int reboot(uint8_t argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     extern void tls_sys_reset(void);
     tls_sys_reset();
+    return 0;
 }
 MSH_CMD_EXPORT(reboot, Reboot System);
 #endif /* RT_USING_FINSH */

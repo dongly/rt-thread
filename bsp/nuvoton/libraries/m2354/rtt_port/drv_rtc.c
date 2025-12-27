@@ -286,7 +286,7 @@ static rt_err_t nu_rtc_control(rt_device_t dev, int cmd, void *args)
 #if defined (NU_RTC_SUPPORT_MSH_CMD)
 
 /* Support "rtc_det_date" command line in msh mode */
-static rt_err_t msh_rtc_set_date(int argc, char **argv)
+static int msh_rtc_set_date(int argc, char **argv)
 {
     rt_uint32_t index, len, arg[3];
 
@@ -309,7 +309,7 @@ MSH_CMD_EXPORT_ALIAS(msh_rtc_set_date, rtc_set_date, e.g: rtc_set_date 2020 1 20
 #if defined (NU_RTC_SUPPORT_MSH_CMD)
 
 /* Support "rtc_det_time" command line in msh mode */
-static rt_err_t msh_rtc_set_time(int argc, char **argv)
+static int msh_rtc_set_time(int argc, char **argv)
 {
     rt_uint32_t index, len, arg[3];
 

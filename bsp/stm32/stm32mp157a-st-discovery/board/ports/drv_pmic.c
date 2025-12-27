@@ -907,7 +907,7 @@ static int pmic_init(void)
 }
 INIT_PREV_EXPORT(pmic_init);
 
-static int i2c_sample(int argc, char *argv[])
+static int i2c_sample(int argc, char **argv)
 {
     rt_uint8_t id = 0;
 

@@ -16,8 +16,10 @@
 #include <rtdevice.h>
 #include "drv_st7796.h"
 
-static void lcd_sample(void)
+static int lcd_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     static rt_uint16_t orange[319*2];
     static rt_uint16_t green[319*2];
     static rt_uint16_t blue[319*2];
@@ -64,5 +66,6 @@ static void lcd_sample(void)
             lcd_load(i, i, 0, 319, green);
         }
     }
+    return 0;
 }
 MSH_CMD_EXPORT(lcd_sample, lcd sample);

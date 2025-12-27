@@ -408,8 +408,10 @@ rt_uint16_t* get_lcd_framebuffer(void)
     return lcd_framebuffer;
 }
 
-void lcd_clear(rt_uint16_t color)
+static int lcd_clear(rt_uint16_t color)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     volatile rt_uint16_t *p = (rt_uint16_t *)lcd_framebuffer;
     int x, y;
 
@@ -420,6 +422,7 @@ void lcd_clear(rt_uint16_t color)
             *p++ = color; /* red */
         }
     }
+    return 0;
 }
 
 void rt_hw_lcd_init(void)

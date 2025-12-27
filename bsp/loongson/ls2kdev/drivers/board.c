@@ -22,13 +22,16 @@
  * this function will reset CPU
  *
  */
-void rt_hw_cpu_reset(void)
+static int rt_hw_cpu_reset(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     WDT_EN = 0x01;
     WDT_TIMER = 0x01;
     WDT_SET = 0x01;
     rt_kprintf("reboot system...\n");
     while (1);
+    return 0;
 }
 MSH_CMD_EXPORT_ALIAS(rt_hw_cpu_reset, reboot, reset cpu);
 
@@ -39,11 +42,14 @@ MSH_CMD_EXPORT_ALIAS(rt_hw_cpu_reset, reboot, reset cpu);
  */
 void rt_hw_cpu_shutdown(void)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     PM1_STS &= 0xffffffff;
     PM1_CNT = 0x3c00;
     rt_kprintf("shutdown...\n");
 
     while (1);
+    return 0;
 }
 MSH_CMD_EXPORT_ALIAS(rt_hw_cpu_shutdown, poweroff, shutdown cpu);
 

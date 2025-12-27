@@ -25,9 +25,12 @@
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
-static void reboot(uint8_t argc, char **argv)
+static int reboot(uint8_t argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_hw_cpu_reset();
+    return 0;
 }
 MSH_CMD_EXPORT(reboot, Reboot System);
 #endif /* RT_USING_FINSH */

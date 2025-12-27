@@ -5,8 +5,10 @@
 #include "drv_i2c.h"
 #define TEST_DEVICE_ADDR 0x53
 static struct rt_i2c_bus_device *i2c_test_bus = RT_NULL;
-int i2c_msg_sample(int argc, char *argv[])
+static int i2c_msg_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_uint8_t write_content[] = {"Phytium Rt-thread I2C Msg Driver Test Successfully !!"};
     rt_uint8_t write_addr[2] = {0x0, 0x0};
     rt_uint8_t write_buf[2 + sizeof(write_content)];

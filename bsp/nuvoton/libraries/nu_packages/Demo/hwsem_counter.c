@@ -66,8 +66,10 @@ static void hwsem_counter_go(void *parameter)
     nu_mutex_deinit(psNuHwSem, evHWSEM0);
 }
 
-static int hwsem_counter_app(void)
+static int hwsem_counter_app(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_err_t result = 0;
     rt_thread_t thread;
     rt_device_t psNuHwSem = rt_device_find("hwsem0");

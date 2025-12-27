@@ -83,8 +83,10 @@ static struct io_config
 #endif
 };
 
-static int print_io_config()
+static int print_io_config(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     int i;
     rt_kprintf("IO Configuration Table\n");
     rt_kprintf("+-------+------------------------+\n");

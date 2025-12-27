@@ -405,8 +405,10 @@ int rt_hw_lcm_port(void)
 INIT_COMPONENT_EXPORT(rt_hw_lcm_port);
 #endif /* BOARD_USING_LCM */
 
-int buzzer_test(void)
+static int buzzer_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     PlayRingTone();
     return 0;
 }
@@ -653,6 +655,9 @@ static S_NU_REG s_NuReg_arr[] =
 
 void nu_check_register(void)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     nu_sys_check_register(&s_NuReg_arr[0]);
+    return 0;
 }
 MSH_CMD_EXPORT(nu_check_register, Check registers);

@@ -75,7 +75,7 @@ static void can_rx_thread(void *parameter)
     }
 }
 
-int can_sample(int argc, char *argv[])
+static int can_sample(int argc, char **argv)
 {
     struct rt_can_msg msg = {0};
     rt_err_t res;

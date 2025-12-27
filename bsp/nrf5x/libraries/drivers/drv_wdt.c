@@ -78,13 +78,16 @@ int rt_wdt_init(void)
 }
 INIT_BOARD_EXPORT(rt_wdt_init);
 
-static int wdt_sample(int argc, char *argv[])
+static int wdt_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_uint32_t timeout = 2;                    /* 溢出时间，单位：秒*/
     rt_device_t wdt = rt_device_find("wdt");
     rt_device_init(wdt);
     rt_device_control(wdt, RT_DEVICE_CTRL_WDT_SET_TIMEOUT, &timeout);
     rt_device_control(wdt, RT_DEVICE_CTRL_WDT_START, RT_NULL);
+    return 0;
 }
 MSH_CMD_EXPORT(wdt_sample, wdt sample);
 

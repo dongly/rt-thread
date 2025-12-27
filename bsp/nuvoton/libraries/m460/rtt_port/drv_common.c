@@ -145,8 +145,10 @@ void SysTick_Handler(void)
     rt_interrupt_leave();
 }
 
-int reboot(int argc, char **argv)
+static int reboot(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     SYS_UnlockReg();
 
     SYS->IPRST0 |= SYS_IPRST0_CHIPRST_Msk;

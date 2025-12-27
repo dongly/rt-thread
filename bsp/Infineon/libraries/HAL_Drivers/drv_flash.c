@@ -331,8 +331,10 @@ static int rt_hw_on_chip_flash_init(void)
 }
 INIT_ENV_EXPORT(rt_hw_on_chip_flash_init);
 
-int flash64k_test(void)
+static int flash64k_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
 #define TEST_OFF (ifx_onchip_flash_256k.len - 0x40000)
     const struct fal_partition *param;
     uint8_t write_buffer[512U] = {0};
@@ -379,6 +381,8 @@ MSH_CMD_EXPORT(flash64k_test, "drv flash64k test.");
 
 int flash32k_test(void)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
 #define TEST32_OFF (ifx_onchip_flash_32k.len - 0x8000)
     const struct fal_partition *param;
     uint8_t write_buffer[512U] = {0};

@@ -1026,7 +1026,7 @@ static int rthw_sdhci_init(void)
 }
 INIT_DEVICE_EXPORT(rthw_sdhci_init);
 
-void sdhci_reg_dump(uint8_t argc, char **argv)
+static int sdhci_reg_dump(uint8_t argc, char **argv)
 {
     rt_ubase_t base;
     if (argc < 2)

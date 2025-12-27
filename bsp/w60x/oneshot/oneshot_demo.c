@@ -108,7 +108,7 @@ static void wm_oneshot_result_cb(int state, unsigned char *ssid, unsigned char *
     rt_thread_startup(tid);
 }
 
-void oneshot_demo(int argc, char *argv[])
+static int oneshot_demo(int argc, char **argv)
 {
     WM_ONESHOT_MODE mode = WM_UDP;
 

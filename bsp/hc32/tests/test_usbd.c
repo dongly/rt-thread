@@ -43,8 +43,10 @@ static rt_err_t cdc_rx_handle(rt_device_t dev, rt_size_t size)
     return RT_EOK;
 }
 
-static int cdc_sample(void)
+static int cdc_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_uint8_t i;
     rt_err_t ret = RT_EOK;
     rt_device_t cdc_dev = RT_NULL;                           /* usb device设备句柄 */
@@ -211,6 +213,8 @@ INIT_COMPONENT_EXPORT(rt_hw_spi_flash_with_sfud_init);
 
 static int hid_sample(void)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_err_t ret = RT_EOK;
     rt_device_t hid_dev = RT_NULL;                           /* usb device设备句柄 */
     char str_write[2][5] = {"test", "Key0"};
@@ -305,6 +309,8 @@ static int winusb_sample(void)
     winusb_dev = rt_device_find(WINUSB_DEV_NAME);
     if (winusb_dev == RT_NULL)
     {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
         rt_kprintf("winusb sample run failed! can't find %s device!\n", WINUSB_DEV_NAME);
         return -RT_ERROR;
     }

@@ -462,8 +462,10 @@ void button_4_callback(void *args)
     }
 }
 
-void gpio_sample(void)
+static int gpio_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_pin_mode(DK_BOARD_LED_1, PIN_MODE_OUTPUT);
     rt_pin_mode(DK_BOARD_LED_2, PIN_MODE_OUTPUT);
     rt_pin_mode(DK_BOARD_LED_3, PIN_MODE_OUTPUT);
@@ -489,6 +491,7 @@ void gpio_sample(void)
     rt_pin_attach_irq(DK_BOARD_BUTTON_4, PIN_IRQ_MODE_FALLING,
                                     button_4_callback, (void*) false); /* true: hi_accuracy(IN_EVENT),false: lo_accuracy(PORT_EVENT) */
     rt_pin_irq_enable(DK_BOARD_BUTTON_4, PIN_IRQ_ENABLE);
+    return 0;
 }
 MSH_CMD_EXPORT(gpio_sample, gpio sample);
 

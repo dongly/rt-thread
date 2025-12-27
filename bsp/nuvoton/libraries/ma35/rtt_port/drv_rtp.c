@@ -121,13 +121,16 @@ static void nu_rtp_init(void)
     nu_rtp_sspcc_setup();
 }
 
-void nu_rtp_start(void)
+static int nu_rtp_start(int argc, char **argv)
 {
     /* Enable RTP clock */
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     CLK_EnableModuleClock(RTP_MODULE);
 
     /* Disable M4 Core reset*/
     SYS->IPRST0 &= ~SYS_IPRST0_CM4RST_Msk;
+    return 0;
 }
 MSH_CMD_EXPORT(nu_rtp_start, start rtp);
 

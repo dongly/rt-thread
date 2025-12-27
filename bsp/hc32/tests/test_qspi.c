@@ -535,7 +535,7 @@ static void qspi_thread_entry(void *parameter)
 }
 
 
-void qspi_w25q_sample(int argc, char *argv[])
+static int qspi_w25q_sample(int argc, char **argv)
 {
     char name[RT_NAME_MAX];
 
@@ -564,6 +564,7 @@ void qspi_w25q_sample(int argc, char *argv[])
             rt_thread_startup(thread);
         }
     }
+    return 0;
 }
 /* 导出到 msh 命令列表中 */
 MSH_CMD_EXPORT(qspi_w25q_sample, qspi w25q sample);

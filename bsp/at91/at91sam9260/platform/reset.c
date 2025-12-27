@@ -33,8 +33,10 @@ void machine_shutdown(void)
 FINSH_FUNCTION_EXPORT_ALIAS(rt_hw_cpu_reset, reset, restart the system);
 
 #ifdef FINSH_USING_MSH
-int cmd_reset(int argc, char** argv)
+static int cmd_reset(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_hw_cpu_reset();
     return 0;
 }
@@ -42,6 +44,8 @@ MSH_CMD_EXPORT_ALIAS(cmd_reset, reset, restart the system);
 
 int cmd_shutdown(int argc, char** argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_hw_cpu_shutdown();
     return 0;
 }

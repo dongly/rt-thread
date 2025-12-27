@@ -343,8 +343,10 @@ int rt_hw_lcd_ili9341_init(void)
 
 #ifdef RT_USING_FINSH
 #define LINE_LEN 32
-static void lcd_test(int argc, char *argv[])
+static int lcd_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     uint16_t pixels[LINE_LEN];
     uint16_t color;
     int x, y, i;
@@ -420,6 +422,7 @@ static void lcd_test(int argc, char *argv[])
     color = 0x0;
     ili9341_lcd_get_pixel((char *)&color, x, y);
     rt_kprintf("lcd get pixel, pixel: 0x%X, x: %d, y: %d\n", color, x, y);
+    return 0;
 }
 MSH_CMD_EXPORT(lcd_test, test lcd display);
 #endif

@@ -253,8 +253,10 @@ INIT_DEVICE_EXPORT(drv_lcd_hw_init);
 
 #ifdef DRV_DEBUG
 #ifdef FINSH_USING_MSH
-int lcd_test()
+static int lcd_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     struct drv_lcd_device *lcd;
     lcd = (struct drv_lcd_device *)rt_device_find("lcd");
     if(lcd == RT_NULL)

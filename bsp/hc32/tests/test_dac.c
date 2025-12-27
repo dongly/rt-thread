@@ -28,7 +28,7 @@
     extern void EthPhyDisable(void);
 #endif /* HC32F4A8 && BSP_USING_DAC2 */
 
-static int dac_vol_sample(int argc, char *argv[])
+static int dac_vol_sample(int argc, char **argv)
 {
     char dac_device_name[] = "dac1";
     rt_uint8_t channel = 1;

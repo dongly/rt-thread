@@ -55,7 +55,7 @@ static rt_err_t timeout_cb(rt_device_t dev, rt_size_t size)
     return 0;
 }
 
-static int hwtimer_sample(int argc, char *argv[])
+static int hwtimer_sample(int argc, char **argv)
 {
     rt_uint8_t i;
     rt_err_t ret = RT_EOK;

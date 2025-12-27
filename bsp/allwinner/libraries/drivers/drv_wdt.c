@@ -96,11 +96,14 @@ int rt_hw_wdg_init(void)
 
 INIT_DEVICE_EXPORT(rt_hw_wdg_init);
 
-void rt_hw_cpu_reset(void)
+static int rt_hw_cpu_reset(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_hw_interrupt_disable();
     hal_watchdog_start(1);
     while(1);
+    return 0;
 }
 MSH_CMD_EXPORT_ALIAS(rt_hw_cpu_reset, reboot, reset machine);
 

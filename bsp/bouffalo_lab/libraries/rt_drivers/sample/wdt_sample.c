@@ -32,7 +32,7 @@ static void idle_hook(void)
     rt_kprintf("feed the dog!\n ");
 }
 
-static int wdt_sample(int argc, char *argv[])
+static int wdt_sample(int argc, char **argv)
 {
     rt_err_t ret = RT_EOK;
     rt_uint32_t timeout = 1;        /* 溢出时间，单位：秒 */

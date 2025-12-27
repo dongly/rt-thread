@@ -129,7 +129,7 @@ static void ssd1306_write_mult_reg(struct rt_i2c_bus_device *i2c_dev,
     buff = NULL;
 }
 
-static int sw_i2c_sample(int argc, char *argv[])
+static int sw_i2c_sample(int argc, char **argv)
 {
     static struct rt_i2c_bus_device *rt_i2c_dev;
     /* print soft i2c usage */

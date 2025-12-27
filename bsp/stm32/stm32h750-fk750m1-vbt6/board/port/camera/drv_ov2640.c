@@ -497,8 +497,10 @@ INIT_APP_EXPORT(rt_hw_ov2640_init);
 #ifdef FINSH_USING_MSH
 #ifdef BSP_USING_LCD_SPI
 #include "drv_lcd_spi.h"
-int camera_sample(int argc, char **argv)
+static int camera_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_device_t dcmi_dev = RT_NULL;
     rt_uint8_t fps = 0;
     dcmi_dev = rt_device_find("dcmi");

@@ -316,8 +316,10 @@ static int rt_hw_qspi_bus_init(void)
 }
 INIT_BOARD_EXPORT(rt_hw_qspi_bus_init);
 #ifdef BSP_QSPI_DEBUG
-static void cmd05_check(void)
+static int cmd05_check(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     struct FQSpi_CmdPack cmd_pack = {0};
     u8 rx_buffer[1];
 
@@ -360,6 +362,8 @@ MSH_CMD_EXPORT_ALIAS(cmd05_check, cmd05_check, cmd05_check);
 #ifdef BSP_QSPI_DEBUG
 static void cmd35_check(void)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     struct FQSpi_CmdPack cmd_pack = {0};
     u8 rx_buffer[1];
 
@@ -401,6 +405,8 @@ MSH_CMD_EXPORT_ALIAS(cmd35_check, cmd35_check, cmd35_check);
 static void cmd15_check(void)
 {
     struct FQSpi_CmdPack cmd_pack = {0};
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     u8 rx_buffer[1];
 
     // cmd_pack.cmd = 0xB7;
@@ -418,6 +424,7 @@ static void cmd15_check(void)
     {
         LOG_I("cnt %d, 0x%x ", i, rx_buffer[i]);
     }
+    return 0;
 }
 MSH_CMD_EXPORT_ALIAS(cmd15_check, cmd15_check, cmd15_check);
 #endif

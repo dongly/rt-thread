@@ -54,8 +54,10 @@ static void blehr_thread_entry(void *param)
     nimble_port_run();
 }
 
-static int blehr_sample(void)
+static int blehr_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_thread_t tid = rt_thread_create(
         "blehr",
         blehr_thread_entry,
@@ -68,6 +70,7 @@ static int blehr_sample(void)
     {
         rt_thread_startup(tid);
     }
+    return 0;
 }
 MSH_CMD_EXPORT(blehr_sample, blehr_sample);
 

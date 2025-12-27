@@ -19,9 +19,12 @@ INIT_BOARD_EXPORT(boardInit);
 
 /* custom finish command */
 extern uint32_t SystemCoreClock;
-void sayHello(void)
+static int sayHello(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
      rt_kprintf("Hello RT-Thread! By Microsemi SmartFusion2 Family FPGA-M2S010.\r\n");
      rt_kprintf("MSS System Core Clock: %d Hz.\r\n", SystemCoreClock);
+    return 0;
 }
 MSH_CMD_EXPORT(sayHello, "say hello to console");

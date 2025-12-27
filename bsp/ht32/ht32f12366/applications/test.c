@@ -119,7 +119,7 @@ static void sys_run_dir(void *parameter)
     }
 }
 
-static int sys_run_task(int argc, char *argv[])
+static int sys_run_task(int argc, char **argv)
 {
     if(argc == 2)
     {
@@ -182,7 +182,7 @@ static void gpio_output_test(void *parameter)
     }
 }
 
-static int gpio_output_task(int argc, char *argv[])
+static int gpio_output_task(int argc, char **argv)
 {
     if(argc == 2)
     {
@@ -272,7 +272,7 @@ static void gpio_input_test(void *parameter)
     }
 }
 
-static int gpio_input_task(int argc, char *argv[])
+static int gpio_input_task(int argc, char **argv)
 {
     if(argc == 2)
     {
@@ -337,7 +337,7 @@ static void uart_thread(void *parameter)
     }
 }
 
-static int uart_task(int argc, char *argv[])
+static int uart_task(int argc, char **argv)
 {
     rt_err_t ret = RT_EOK;
 
@@ -455,7 +455,7 @@ static void i2c_thread(void *parameter)
     }
 }
 
-static int i2c_task(int argc, char *argv[])
+static int i2c_task(int argc, char **argv)
 {
     rt_err_t ret = RT_EOK;
 
@@ -527,7 +527,7 @@ static void spi_thread(void *parameter)
     rt_kprintf("use rt_spi_send_then_recv() read MX25L6406 ID is:0x%X%X%X\n", id[0], id[1], id[2]);
 }
 
-static int spi_task(int argc, char *argv[])
+static int spi_task(int argc, char **argv)
 {
     rt_err_t ret = RT_EOK;
     struct rt_spi_configuration cfg;
@@ -625,7 +625,7 @@ static void adc_test(void *parameter)
     }
 }
 
-static int adc_task(int argc, char *argv[])
+static int adc_task(int argc, char **argv)
 {
     if(argc == 2)
     {
@@ -665,7 +665,7 @@ static void wdt_test(void)
     rt_device_control(wdt_dev, RT_DEVICE_CTRL_WDT_KEEPALIVE, RT_NULL);
 }
 
-static int wdt_task(int argc, char *argv[])
+static int wdt_task(int argc, char **argv)
 {
     rt_err_t ret = -RT_ERROR;
     rt_uint16_t wdt_time = 5;
@@ -758,7 +758,7 @@ static void usbd_test(void *parameter)
     }
 }
 
-static int usbd_task(int argc, char *argv[])
+static int usbd_task(int argc, char **argv)
 {
     rt_err_t ret = -RT_ERROR;
 

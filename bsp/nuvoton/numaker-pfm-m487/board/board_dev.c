@@ -387,8 +387,10 @@ static void PlayRingTone(void)
     }
 }
 
-int buzzer_test(void)
+static int buzzer_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     PlayRingTone();
     return 0;
 }

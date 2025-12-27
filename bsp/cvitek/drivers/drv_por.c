@@ -50,8 +50,10 @@ static int cvi_restart(void)
     return 0;
 }
 
-void rt_hw_cpu_reset(void)
+static int rt_hw_cpu_reset(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_kprintf("Rebooting...\n");
 
     _cvi_rtc_ctrl_base = (rt_ubase_t)DRV_IOREMAP((void *)_cvi_rtc_ctrl_base, 0x1000);
@@ -61,6 +63,7 @@ void rt_hw_cpu_reset(void)
 
     rt_kprintf("ERROR: Failed to reboot the system\n");
     while (1);
+    return 0;
 }
 
 MSH_CMD_EXPORT_ALIAS(rt_hw_cpu_reset, reboot, reset machine);

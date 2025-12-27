@@ -360,8 +360,10 @@ int n32_hw_crypto_device_init(void)
 }
 INIT_DEVICE_EXPORT(n32_hw_crypto_device_init);
 
-static void crc_demo(uint8_t argc, char **argv)
+static int crc_demo(uint8_t argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     struct hwcrypto_crc_cfg modbus_cfg =
     {
         .last_val = 0xFFFF,
@@ -409,6 +411,7 @@ static void crc_demo(uint8_t argc, char **argv)
     rt_kprintf("crc16 msb: %x \n", result);
 
     rt_hwcrypto_crc_destroy(ctx);
+    return 0;
 }
 
 MSH_CMD_EXPORT(crc_demo, demo for hardwave crc.);

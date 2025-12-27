@@ -85,7 +85,7 @@ void sys_start_standby(int ms)
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 #include <stdlib.h>
-static void standby(uint8_t argc, char **argv)
+static int standby(uint8_t argc, char **argv)
 {
     if (argc != 2)
     {
@@ -96,6 +96,7 @@ static void standby(uint8_t argc, char **argv)
     {
         sys_start_standby(atoi(argv[1]));
     }
+    return 0;
 }
 MSH_CMD_EXPORT(standby, sleep system);
 #endif /* RT_USING_FINSH */

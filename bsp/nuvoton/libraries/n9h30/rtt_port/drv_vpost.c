@@ -402,7 +402,7 @@ INIT_DEVICE_EXPORT(rt_hw_vpost_init);
 
 
 /* Support "vpost_set_osd_colkey" command line in msh mode */
-static rt_err_t vpost_set_osd_colkey(int argc, char **argv)
+static int vpost_set_osd_colkey(int argc, char **argv)
 {
     rt_uint32_t index, len, arg[4];
 
@@ -425,7 +425,7 @@ static rt_err_t vpost_set_osd_colkey(int argc, char **argv)
 MSH_CMD_EXPORT(vpost_set_osd_colkey, e.g: vpost_set_osd_colkey R G B);
 
 /* Support "vpost_show_layer" command line in msh mode */
-static rt_err_t vpost_show_layer(int argc, char **argv)
+static int vpost_show_layer(int argc, char **argv)
 {
     rt_uint32_t index, len, arg[2];
     nu_vpost_t psVpostLayer;
@@ -444,7 +444,7 @@ static rt_err_t vpost_show_layer(int argc, char **argv)
 MSH_CMD_EXPORT(vpost_show_layer, e.g: vpost_show_layer layer);
 
 /* Support "vpost_hide_layer" command line in msh mode */
-static rt_err_t vpost_hide_layer(int argc, char **argv)
+static int vpost_hide_layer(int argc, char **argv)
 {
     rt_uint32_t index, len, arg[2];
     nu_vpost_t psVpostLayer;
@@ -463,7 +463,7 @@ static rt_err_t vpost_hide_layer(int argc, char **argv)
 MSH_CMD_EXPORT(vpost_hide_layer, e.g: vpost_hide_layer layer);
 
 /* Support "vpost_fill_color" command line in msh mode */
-static rt_err_t vpost_fill_color(int argc, char **argv)
+static int vpost_fill_color(int argc, char **argv)
 {
     rt_uint32_t index, len, arg[5];
     nu_vpost_t psVpostLayer;

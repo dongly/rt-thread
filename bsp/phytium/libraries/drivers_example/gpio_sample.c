@@ -47,8 +47,10 @@ static void gpio_irq_test(s32 vector, void *param)
                 gpio_instance->config.pin);
 }
 /* this function will toggle output pin and test intr of input pin */
-rt_err_t gpio_toggle_sample()
+static int gpio_toggle_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_err_t res = RT_EOK;
     static u32 set_level = FGPIO_OPS_LEVEL_LOW;
     u32 get_level;

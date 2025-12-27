@@ -770,8 +770,10 @@ static int rt_hw_sdh_init(void)
 }
 INIT_DEVICE_EXPORT(rt_hw_sdh_init);
 
-void nu_sd_attach(void)
+static int nu_sd_attach(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     int i;
     /* ready to change */
     for (i = (SDH_START + 1); i < SDH_CNT; i++)
@@ -779,6 +781,7 @@ void nu_sd_attach(void)
         if (nu_sdh_arr[i].host)
             mmcsd_change(nu_sdh_arr[i].host);
     }
+    return 0;
 }
 MSH_CMD_EXPORT(nu_sd_attach, attach card);
 
@@ -787,8 +790,11 @@ void nu_sd_regdump(void)
     int i;
     for (i = (SDH_START + 1); i < SDH_CNT; i++)
     {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
         if (nu_sdh_arr[i].host)
             LOG_HEX("sdh_reg", 16, (void *)nu_sdh_arr[i].base, sizeof(SDH_T));
+    return 0;
     }
 }
 MSH_CMD_EXPORT(nu_sd_regdump, dump sdh registers);

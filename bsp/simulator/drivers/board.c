@@ -64,8 +64,10 @@ _CRTIMP void __cdecl abort(void);
 #endif
 #endif
 
-void rt_hw_exit(void)
+static int rt_hw_exit(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_kprintf("RT-Thread, bye\n");
 #if !defined(_WIN32) && defined(__GNUC__)
     /* *
@@ -80,6 +82,7 @@ void rt_hw_exit(void)
     }
 #endif
     exit(0);
+    return 0;
 }
 
 #if defined(RT_USING_FINSH)

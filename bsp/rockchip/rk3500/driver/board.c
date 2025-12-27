@@ -24,9 +24,12 @@ void rt_hw_board_init(void)
     rt_hw_common_setup();
 }
 
-void reboot(void)
+static int reboot(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     psci_system_reboot();
+    return 0;
 }
 MSH_CMD_EXPORT(reboot, reboot...);
 

@@ -264,8 +264,10 @@ static rt_err_t timeout_cb(rt_device_t dev, rt_size_t size)
     return RT_EOK;
 }
 
-int hwtimer_sample(void)
+static int hwtimer_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_err_t ret = RT_EOK;
     rt_hwtimerval_t timeout_s;
     rt_device_t hw_dev = RT_NULL;

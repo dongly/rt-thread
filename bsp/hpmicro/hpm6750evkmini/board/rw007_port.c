@@ -87,8 +87,10 @@ int wifi_spi_device_init(void)
 }
 INIT_APP_EXPORT(wifi_spi_device_init);
 
-static int rw007_update(void)
+static int rw007_update(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_device_t device = rt_device_find(RW007_SPI_BUS_NAME);
     struct stm32_spi *hspi = (struct stm32_spi *)device->user_data;
     set_rw007_mode(RW007_AT_MODE);

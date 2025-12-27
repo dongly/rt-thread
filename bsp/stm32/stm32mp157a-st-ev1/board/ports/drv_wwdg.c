@@ -80,7 +80,7 @@ static void wwdg_stop(void)
     feed_flag = 0;
 }
 
-static int wwdg_sample(int argc, char *argv[])
+static int wwdg_sample(int argc, char **argv)
 {
     if (argc > 1)
     {

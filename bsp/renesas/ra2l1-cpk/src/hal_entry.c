@@ -37,9 +37,11 @@ void irq_callback_test(void *args)
     rt_kprintf("\n IRQ03 triggered \n");
 }
 
-void icu_sample(void)
+static int icu_sample(int argc, char **argv)
 {
     /* init */
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_uint32_t pin = rt_pin_get(USER_INPUT);
     rt_kprintf("\n pin number : 0x%04X \n", pin);
     rt_err_t err = rt_pin_attach_irq(pin, PIN_IRQ_MODE_RISING, irq_callback_test, RT_NULL);
@@ -52,6 +54,7 @@ void icu_sample(void)
     {
         rt_kprintf("\n enable irq failed. \n");
     }
+    return 0;
 }
 MSH_CMD_EXPORT(icu_sample, icu sample);
 #endif

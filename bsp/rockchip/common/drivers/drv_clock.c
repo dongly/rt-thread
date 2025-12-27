@@ -448,8 +448,10 @@ void clk_disable_unused(const struct clk_unused *clks_unused)
 /**
  * @brief  clock dump frequency, dump cru registers, used for debug.
  */
-static void clk_dump(void)
+static int clk_dump(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     const struct clk_init *clks = g_clk_init;
     int i;
 
@@ -474,6 +476,7 @@ static void clk_dump(void)
     {
         rt_kprintf("%s: cru_softreset_con[%d] = %lx\n", __func__, i, CRU->CRU_SOFTRST_CON[i]);
     }
+    return 0;
 }
 
 #ifdef RT_USING_FINSH

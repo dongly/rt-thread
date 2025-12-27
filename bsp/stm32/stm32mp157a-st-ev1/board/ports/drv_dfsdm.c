@@ -308,6 +308,8 @@ INIT_DEVICE_EXPORT(dfsdm_init);
 
 static int dfsdm_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     if (argc != 1)
     {
         rt_kprintf("Usage:\n");

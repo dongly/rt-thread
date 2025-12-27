@@ -207,8 +207,10 @@ _graphic_fail:
     }
 }
 
-int graphic_test(void)
+static int graphic_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_thread_t graphic_tid = rt_thread_create("graphic work", graphic_thread, RT_NULL,
             GRAPHIC_THREAD_STACK_SIZE, GRAPHIC_THREAD_PRIORITY, GRAPHIC_THREAD_TIMESLICE);
 

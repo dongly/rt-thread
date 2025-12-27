@@ -104,8 +104,10 @@ ATTR_PLACE_AT(".isr_vector") void mchtmr_isr(void)
     rt_tick_increase();
 }
 
-void rt_hw_cpu_reset(void)
+static int rt_hw_cpu_reset(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     HPM_PPOR->RESET_ENABLE |= (1UL << 31);
     HPM_PPOR->RESET_HOT &= ~(1UL << 31);
     HPM_PPOR->RESET_COLD |= (1UL << 31);
@@ -114,6 +116,7 @@ void rt_hw_cpu_reset(void)
     while(1) {
 
     }
+    return 0;
 }
 
 MSH_CMD_EXPORT_ALIAS(rt_hw_cpu_reset, reset, reset the board);

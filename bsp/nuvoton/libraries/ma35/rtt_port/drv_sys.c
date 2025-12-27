@@ -49,8 +49,10 @@ void machine_reset(void)
     while (1);
 }
 
-int reboot(int argc, char **argv)
+static int reboot(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     machine_reset();
     return 0;
 }
@@ -149,6 +151,8 @@ static int nu_tempsen_go(void)
 
     if (err != RT_EOK)
     {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
         LOG_E("set %s idle hook failed!\n", __func__);
         return -1;
     }
@@ -226,9 +230,12 @@ void nu_clock_isready(void)
     uint32_t u32IsReady, i;
     for (i = 0; i < CLOCKNAME_SIZE; i++)
     {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
         if (i == 5 || i == 7 || i == 2) continue;
         u32IsReady = CLK_WaitClockReady(1 << i);
         LOG_I("%s: %s\n", szClockName[i], (u32IsReady == 1) ? "[Stable]" : "[Unstable]");
+    return 0;
     }
 }
 

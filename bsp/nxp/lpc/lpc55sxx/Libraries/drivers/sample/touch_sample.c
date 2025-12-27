@@ -16,8 +16,10 @@
 #include <rtdevice.h>
 #include "drv_gt911.h"
 
-static int touch_sample(void)
+static int touch_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     gt911_input_t ctp_input;
 
     rt_device_t dev = rt_device_find("capt");

@@ -28,8 +28,10 @@ static void _usb_init_delay(void)
 }
 
 /* Check current usb role */
-static void usb_role(void)
+static int usb_role(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     uint32_t status;
 
     status = (OTG->STATUS) & (OTG_STATUS_ASHOST_Msk | OTG_STATUS_ASPERI_Msk | OTG_STATUS_IDSTS_Msk);

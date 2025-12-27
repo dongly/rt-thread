@@ -1459,7 +1459,7 @@ void lcd_auto_fill(void *para)
 }
 
 #include <stdlib.h> /* atoi */
-void lcd_fill_test(int argc, void **argv)
+static int lcd_fill_test(int argc, static int **argv)
 {
     static rt_uint8_t lcd_init = 0;
     rt_device_t lcd = RT_NULL;
@@ -1485,6 +1485,7 @@ void lcd_fill_test(int argc, void **argv)
             rt_thread_startup(tid);
         }
     }
+    return 0;
 }
 MSH_CMD_EXPORT(lcd_fill_test, lcd fill test for mcu lcd);
 #endif

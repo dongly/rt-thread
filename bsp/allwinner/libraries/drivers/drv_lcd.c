@@ -752,8 +752,10 @@ int rt_hw_lcd_init(void)
 }
 // INIT_DEVICE_EXPORT(rt_hw_lcd_init);
 
-static int lcd_draw_point(int args, char *argv[])
+static int lcd_draw_point(int args, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     struct lcd_device *lcd_drv = g_lcd;
     int x = 0;
     int y = 0;
@@ -806,7 +808,10 @@ MSH_CMD_EXPORT(lcd_draw_point, draw a point on lcd);
 
 void lcd_pwm_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     set_lcd_backlight(atoi(argv[1]));
+    return 0;
 }
 
 MSH_CMD_EXPORT(lcd_pwm_test, set pwm);

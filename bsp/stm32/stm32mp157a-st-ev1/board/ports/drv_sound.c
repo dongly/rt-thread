@@ -484,7 +484,7 @@ struct wav_info
     struct DATA_BLOCK_DEF  data_block;
 };
 
-int wavplay_sample(int argc, char **argv)
+static int wavplay_sample(int argc, char **argv)
 {
 #define BUFSZ   1024
 #define SOUND_DEVICE_NAME    "sound0"

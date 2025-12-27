@@ -34,14 +34,17 @@ static void SysTimerInterrupt(void);
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
-static void reboot(uint8_t argc, char **argv)
+static int reboot(uint8_t argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
 #ifdef SOC_SERIES_R9A07G0
     R_BSP_RegisterProtectDisable(BSP_REG_PROTECT_LPC_RESET);
     R_BSP_SystemReset();
 #else
     NVIC_SystemReset();
 #endif
+    return 0;
 }
 MSH_CMD_EXPORT(reboot, Reboot System);
 #endif /* RT_USING_FINSH */

@@ -39,6 +39,8 @@ static uint8_t read_buffer[TEST_BUF_SIZE] = {0};
 
 static int fal_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     const struct fal_partition *param;
     int ret;
     uint32_t Address;

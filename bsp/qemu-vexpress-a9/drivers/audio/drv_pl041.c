@@ -348,8 +348,10 @@ rt_err_t aaci_pl041_init(void)
 
 #if 0
 #define PL041_DUMP(_v)    rt_kprintf("%32s:addr:0x%08x data:0x%08x\n", #_v, &(_v), (_v))
-int _aaci_pl041_reg_dump(int argc, char **argv)
+static int _aaci_pl041_reg_dump(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     PL041_DUMP(PL041->rxcr1);
     PL041_DUMP(PL041->txcr1);
     PL041_DUMP(PL041->sr1);

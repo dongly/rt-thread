@@ -22,8 +22,10 @@
 #define PWM_DEV_NAME        "pwm"  /* PWM设备名称 */
 #define PWM_DEV_CHANNEL      0       /* PWM通道 */
 struct rt_device_pwm *pwm_dev;      /* PWM设备句柄 */
-static int pwm_led_sample(int argc, char *argv[])
+static int pwm_led_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_uint32_t period, pulse, dir;
     period = 500000;    /* 周期为0.5ms，单位为纳秒ns */
     dir = 1;            /* PWM脉冲宽度值的增减方向 */

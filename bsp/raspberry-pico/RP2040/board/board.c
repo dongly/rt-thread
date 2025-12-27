@@ -96,8 +96,10 @@ void rt_hw_board_init()
 }
 
 #ifdef RT_USING_MSH
-static int pico_reboot(int argc, char *argv[])
+static int pico_reboot(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     reset_usb_boot(0, 0);
     return 0;
 }

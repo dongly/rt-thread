@@ -530,8 +530,10 @@ static void ccap_grabber_create(ccap_grabber_param_t psGrabberParam)
     }
 }
 
-int ccap_demo(void)
+static int ccap_demo(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
 #if defined(BSP_USING_CCAP0)
     static ccap_grabber_param ccap0_grabber_param = {"grab0", "ccap0", "sensor0", "lcd"};
     ccap_grabber_create(&ccap0_grabber_param);

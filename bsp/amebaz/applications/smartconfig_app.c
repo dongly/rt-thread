@@ -120,9 +120,12 @@ static int smartconfig_result(rt_smartconfig_type result_type, char *ssid, char 
     return 0;
 }
 
-void smartconfig_demo(void)
+static int smartconfig_demo(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_smartconfig_start(SMARTCONFIG_TYPE_AIRKISS, SMARTCONFIG_ENCRYPT_NONE, RT_NULL, smartconfig_result);
+    return 0;
 }
 
 #ifdef RT_USING_FINSH

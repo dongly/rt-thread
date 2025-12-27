@@ -24,5 +24,4 @@ void rt_hw_serial_init(void);
 void rt_hw_sdl_start(void);
 void rt_hw_win32_low_cpu(void);
 
-void rt_hw_exit(void);
 #endif

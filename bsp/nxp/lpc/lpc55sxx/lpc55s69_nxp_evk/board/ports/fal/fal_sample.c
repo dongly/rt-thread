@@ -149,9 +149,11 @@ static int fal_test(const char *partiton_name)
     return ret;
 }
 
-static void fal_sample(void)
+static int fal_sample(int argc, char **argv)
 {
     /* 1- init */
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     fal_init();
 
     if (fal_test("font") == 0)
@@ -171,6 +173,7 @@ static void fal_sample(void)
     {
         rt_kprintf("Fal partition (%s) test failed!\n", "download");
     }
+    return 0;
 }
 MSH_CMD_EXPORT(fal_sample, fal sample);
 
@@ -213,10 +216,13 @@ static void fal_elmfat_sample(void)
     fd = open("/user/test.txt", O_WRONLY | O_CREAT);
     if (fd >= 0)
     {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
         if(write(fd, str, sizeof(str)) == sizeof(str))
             rt_kprintf("Write data done.\n");
 
         close(fd);
+    return 0;
     }
 
     /* Open file in read-only mode */
@@ -245,6 +251,8 @@ static void easyflash_sample(void)
         char *c_old_boot_times, c_new_boot_times[11] = {0};
 
         /* get the boot count number from Env */
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
         c_old_boot_times = ef_get_env("boot_times");
         /* get the boot count number failed */
         if (c_old_boot_times == RT_NULL)
@@ -261,6 +269,7 @@ static void easyflash_sample(void)
         /* set and store the boot count number to Env */
         ef_set_env("boot_times", c_new_boot_times);
         ef_save_env();
+    return 0;
     }
 }
 MSH_CMD_EXPORT(easyflash_sample, easyflash sample);

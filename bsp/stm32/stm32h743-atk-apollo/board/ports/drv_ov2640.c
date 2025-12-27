@@ -677,7 +677,7 @@ int rt_ov2640_init(void)
 }
 INIT_APP_EXPORT(rt_ov2640_init);
 
-int camera_sample(int argc, char **argv)
+static int camera_sample(int argc, char **argv)
 {
    rt_err_t result = RT_EOK;
    int fd = -1;

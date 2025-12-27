@@ -326,7 +326,7 @@ static void spi_thread_entry(void *parameter)
     }
 }
 
-static void spi_w25q_sample(int argc, char *argv[])
+static int spi_w25q_sample(int argc, char **argv)
 {
     char name[RT_NAME_MAX];
 
@@ -354,6 +354,7 @@ static void spi_w25q_sample(int argc, char *argv[])
             rt_thread_startup(thread);
         }
     }
+    return 0;
 }
 /* 导出到 msh 命令列表中 */
 MSH_CMD_EXPORT(spi_w25q_sample, spi w25q sample);

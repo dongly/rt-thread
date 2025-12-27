@@ -219,8 +219,10 @@ static void Slider_thread_entry(void *parameter)
     }
 }
 
-int Slider_ctrl_sample(void)
+static int Slider_ctrl_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_err_t ret = RT_EOK;
 
     sld_thread = rt_thread_create("slider_th",

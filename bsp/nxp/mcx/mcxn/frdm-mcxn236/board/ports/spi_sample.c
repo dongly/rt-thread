@@ -45,6 +45,8 @@ INIT_APP_EXPORT(rt_spi_device_init);
 /* spi loopback mode test case */
 static int spi_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_uint8_t t_buf[32], r_buf[32];
     int i = 0;
     static struct rt_spi_message msg1;

@@ -223,8 +223,10 @@ INIT_BOARD_EXPORT(rt_hw_pwm_init);
 
 struct rt_device_pwm *pwm_dev;
 
-static int pwm_sample(int argc, char *argv[])
+static int pwm_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_uint32_t period, pulse, dir;
 
     period = 1 * 1000 * 1000;

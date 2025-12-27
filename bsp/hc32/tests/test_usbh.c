@@ -41,8 +41,10 @@
 #define TEST_FN     "/test_usbh.c"
 static char test_data[120], buffer[120];
 
-void usbh_readwrite(const char *filename)
+static int usbh_readwrite(const char *filename)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     int fd;
     int index, length;
 

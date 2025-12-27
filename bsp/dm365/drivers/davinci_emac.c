@@ -1744,8 +1744,10 @@ void dump_emac_stats(void)
 FINSH_FUNCTION_EXPORT(dump_emac_stats, dump emac statistics);
 
 #ifdef FINSH_USING_MSH
-int cmd_dump_emac_stats(int argc, char** argv)
+static int cmd_dump_emac_stats(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     dump_emac_stats();
     return 0;
 }

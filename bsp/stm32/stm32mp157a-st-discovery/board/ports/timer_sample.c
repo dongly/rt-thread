@@ -125,7 +125,7 @@ static int hwtimer_start(void)
     return ret;
 }
 
-static int tim_sample(int argc, char *argv[])
+static int tim_sample(int argc, char **argv)
 {
     if (argc > 1)
     {

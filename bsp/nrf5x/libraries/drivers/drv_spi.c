@@ -338,9 +338,11 @@ rt_err_t rt_hw_spi_device_attach(const char *bus_name, const char *device_name, 
 #define TEST_STRING "liguan"
 static rt_uint8_t       m_tx_buf[] = TEST_STRING;           /**< TX buffer. */
 
-static int spi_sample(int argc, char *argv[])
+static int spi_sample(int argc, char **argv)
 
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     struct rt_spi_device *spi_dev;
     char name[RT_NAME_MAX];
     rt_uint8_t w25x_read_id = 0x65;

@@ -854,6 +854,8 @@ static int ncheck_all(int argc, char **argv)
 
 static int nid(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     spinand_read_id(RT_NULL);
     return 0;
 }
@@ -934,6 +936,8 @@ static int nprobe(int argc, char **argv)
 
 static int nprobe_auto(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     int count = 0;
 
     while (count++ < 100)

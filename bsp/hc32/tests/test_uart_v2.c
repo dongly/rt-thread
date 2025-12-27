@@ -184,7 +184,7 @@ static void serial_thread_entry_int(void *parameter)
     }
 }
 
-int uart_sample_v2(int argc, char *argv[])
+static int uart_sample_v2(int argc, char **argv)
 {
     rt_thread_t thread;
     rt_err_t ret = RT_EOK;

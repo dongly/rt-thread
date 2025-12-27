@@ -17,8 +17,10 @@
 #include "drv_st7796.h"
 #include "drv_gt911.h"
 
-static void lcd_touch_sample(void)
+static int lcd_touch_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     static rt_uint16_t white[319*2];
     rt_uint16_t green[4*4*2];
     st7796_t *lcd_obj = (st7796_t *)rt_device_find("lcd");
@@ -60,5 +62,6 @@ static void lcd_touch_sample(void)
             }
         }
     }
+    return 0;
 }
 MSH_CMD_EXPORT(lcd_touch_sample, lcd sample);

@@ -239,6 +239,8 @@ static void dump_hex(const rt_uint8_t *ptr, rt_size_t buflen)
 
 static int spdifrx_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     extern SAI_HandleTypeDef hsai_block4_a;
 
     if (argc != 1)

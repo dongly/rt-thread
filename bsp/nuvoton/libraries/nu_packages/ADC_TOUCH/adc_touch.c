@@ -697,8 +697,10 @@ static void adc_touch_entry(void *parameter)
 
 
 /* Support "nu_touch_start" command line in msh mode */
-static rt_err_t nu_touch_start(int argc, char **argv)
+static int nu_touch_start(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     if (adc_touch_thread == RT_NULL)
     {
         adc_touch_thread = rt_thread_create("adc_touch_thread",
@@ -718,6 +720,8 @@ MSH_CMD_EXPORT(nu_touch_start, e.g: start adc touch);
 /* Support "nu_touch_stop" command line in msh mode */
 static rt_err_t nu_touch_stop(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     adc_touch_worker_run = 0;
     adc_touch_thread = RT_NULL;
     return 0;
@@ -733,6 +737,8 @@ INIT_APP_EXPORT(nu_touch_autostart);
 static rt_err_t nu_touch_calibration(int argc, char **argv)
 {
     /* Clean calibration matrix data for getting raw adc value. */
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     nu_adc_touch_reset_calmat();
 
     return 0;

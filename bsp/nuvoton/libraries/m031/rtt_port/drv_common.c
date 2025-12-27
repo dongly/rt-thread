@@ -127,11 +127,14 @@ int __rt_ffs(int value)
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
-static void reboot(uint8_t argc, char **argv)
+static int reboot(uint8_t argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     SYS_UnlockReg();
 
     SYS->IPRST0 |= SYS_IPRST0_CHIPRST_Msk;
+    return 0;
 }
 MSH_CMD_EXPORT(reboot, Reboot System);
 #endif /* RT_USING_FINSH */

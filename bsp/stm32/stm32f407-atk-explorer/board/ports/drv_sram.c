@@ -88,8 +88,10 @@ INIT_BOARD_EXPORT(rt_hw_sram_init);
 
 #ifdef DRV_DEBUG
 #ifdef FINSH_USING_MSH
-static int sram_test(void)
+static int sram_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     int i = 0;
     uint32_t start_time = 0, time_cast = 0;
 #if SRAM_DATA_WIDTH == 8

@@ -173,8 +173,10 @@ INIT_DEVICE_EXPORT(rt_hw_rtc_init);
 
 #define RTC_NAME       "rtc"
 
-static int rtc_sample(int argc, char *argv[])
+static int rtc_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_err_t ret = RT_EOK;
     time_t now;
     rt_device_t device = RT_NULL;

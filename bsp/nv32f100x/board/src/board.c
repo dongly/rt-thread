@@ -100,8 +100,10 @@ void rt_hw_board_init()
 #endif
 }
 
-int cmd_reset(int argc, char** argv)
+static int cmd_reset(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     NVIC_SystemReset();
 
     return 0;

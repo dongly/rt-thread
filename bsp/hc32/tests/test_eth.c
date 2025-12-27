@@ -64,10 +64,13 @@
 
 extern void httpd_init(void);
 
-void eth_webserver(void)
+static int eth_webserver(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_kprintf("Initialize the httpd...... \r\n");
     httpd_init();
+    return 0;
 }
 MSH_CMD_EXPORT(eth_webserver, eth: start web server);
 

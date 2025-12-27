@@ -94,8 +94,10 @@ static void smp_sgi_test_thread(void *parameter)
     }
 }
 
-void smp_sgi_sample(int argc, char *argv[])
+static int smp_sgi_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_thread_t thread;
     rt_err_t res;
     demo_core_test();
@@ -103,6 +105,7 @@ void smp_sgi_sample(int argc, char *argv[])
     thread = rt_thread_create("smp_test_thread", smp_sgi_test_thread, RT_NULL, 4096, 25, 10);
     res = rt_thread_startup(thread);
     RT_ASSERT(res == RT_EOK);
+    return 0;
 }
 
 MSH_CMD_EXPORT(smp_sgi_sample, smp toggle sgi sample.);

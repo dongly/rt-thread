@@ -19,6 +19,5 @@
 void sw0_isr(void *args);
 void sw1_isr(void *args);
 void boardInit(void);
-void sayHello(void);
 
 #endif

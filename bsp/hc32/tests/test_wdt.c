@@ -48,7 +48,7 @@ static void _wdt_cmd_print_usage(void)
     rt_kprintf("    e.g. MSH >wdt_sample set_timeout 10\n");
 }
 
-static int wdt_sample(int argc, char *argv[])
+static int wdt_sample(int argc, char **argv)
 {
     int ret = RT_EOK;
     rt_uint32_t timeleft;

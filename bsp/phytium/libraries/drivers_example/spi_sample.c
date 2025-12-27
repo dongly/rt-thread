@@ -30,8 +30,10 @@
 
 static struct rt_spi_device spi_flash_device;
 /* spi test example */
-rt_err_t fspim_test_sample()
+static int fspim_test_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     static struct rt_spi_device *spi_device = RT_NULL;
     static struct rt_spi_device *spi_bus = RT_NULL;
     rt_err_t res = RT_EOK;

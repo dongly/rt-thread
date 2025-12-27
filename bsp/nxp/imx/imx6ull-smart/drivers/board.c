@@ -55,8 +55,10 @@ rt_region_t init_page_region = {
 };
 #endif
 
-int board_reboot(int argc, char **argv)
+static int board_reboot(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     wdog_config_t config;
     SRC_Type *src = (SRC_Type*)g_src_vbase;
     WDOG_Type *wdog = (WDOG_Type*)g_wdog1_vbase;

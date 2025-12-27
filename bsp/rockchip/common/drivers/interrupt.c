@@ -183,8 +183,10 @@ static void irq_leave_hook(void)
     }
 }
 
-static void dump_irq_summry(int argc, char **argv)
+static int dump_irq_summry(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     uint32_t i;
 
     rt_kprintf("IRQ    COUNT       AVG         MAX\n");
@@ -194,6 +196,7 @@ static void dump_irq_summry(int argc, char **argv)
                    g_irq_prof[i].time_avg,
                    g_irq_prof[i].time_max);
     }
+    return 0;
 }
 
 #ifdef RT_USING_FINSH

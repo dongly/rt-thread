@@ -73,7 +73,7 @@ void alarm_callback_fun(rt_alarm_t alarm, time_t timestamp)
 };
 #endif /* RT_USING_ALARM */
 
-static int rtc_sample(int argc, char *argv[])
+static int rtc_sample(int argc, char **argv)
 {
     rt_uint8_t idx;
     rt_uint16_t temp1, temp2, temp3;

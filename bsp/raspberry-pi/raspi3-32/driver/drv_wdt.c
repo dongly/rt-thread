@@ -118,8 +118,10 @@ INIT_DEVICE_EXPORT(rt_hw_wdt_init);
 /**
  * Reboot
  */
-int reboot(void)
+static int reboot(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     unsigned int r;
 
     rt_kprintf("reboot system...\n");

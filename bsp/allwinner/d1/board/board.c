@@ -116,9 +116,12 @@ void rt_hw_board_init(void)
 #endif
 }
 
-void rt_hw_cpu_reset(void)
+static int rt_hw_cpu_reset(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     sbi_shutdown();
     while(1);
+    return 0;
 }
 MSH_CMD_EXPORT_ALIAS(rt_hw_cpu_reset, reboot, reset machine);

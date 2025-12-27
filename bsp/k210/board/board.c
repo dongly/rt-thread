@@ -43,8 +43,10 @@ void primary_cpu_entry(void)
 #include <clint.h>
 #include <sysctl.h>
 
-int freq(void)
+static int freq(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_uint64_t value = 0;
 
     value = sysctl_clock_get_freq(SYSCTL_CLOCK_PLL0);
@@ -132,7 +134,10 @@ void rt_hw_us_delay(rt_uint32_t usec)
     rt_uint32_t nop_all = usec * sysctl_clock_get_freq(SYSCTL_CLOCK_CPU) / 1000000UL;
     while (1)
     {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
        if(read_cycle() - cycle >= nop_all)
             break;
+    return 0;
     }
 }

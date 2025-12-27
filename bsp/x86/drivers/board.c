@@ -79,8 +79,10 @@ void rt_hw_board_init(void)
 #endif
 }
 
-static int reboot(void)
+static int reboot(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     outb(KBSTATP, 0xFE); /* pulse reset low */
 
     return 0;

@@ -262,8 +262,10 @@ void led_matrix_test1()
 }
 MSH_CMD_EXPORT(led_matrix_test1, Test led matrix on board)
 
-void led_matrix_test2()
+static int led_matrix_test2(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_memset(RGB_Data, 0x00, sizeof(RGB_Data));
     Set_LEDColor(0, BLUE);
     Set_LEDColor(1, RED);
@@ -283,6 +285,7 @@ void led_matrix_test2()
     Set_LEDColor(18, WHITE);
 
     RGB_Reflash();
+    return 0;
 }
 MSH_CMD_EXPORT(led_matrix_test2, Test led matrix on board)
 

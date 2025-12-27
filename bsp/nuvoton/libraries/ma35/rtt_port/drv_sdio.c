@@ -769,8 +769,10 @@ void nu_sdh_host_initial(nu_sdh_t sdh)
     //mmcsd_change(host);
 }
 
-void nu_sd_attach(void)
+static int nu_sd_attach(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     int i;
     /* ready to change */
     for (i = (SDH_START + 1); i < SDH_CNT; i++)
@@ -778,6 +780,7 @@ void nu_sd_attach(void)
         if (nu_sdh_arr[i].host)
             mmcsd_change(nu_sdh_arr[i].host);
     }
+    return 0;
 }
 MSH_CMD_EXPORT(nu_sd_attach, attach card);
 

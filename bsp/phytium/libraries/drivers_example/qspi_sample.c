@@ -28,8 +28,10 @@ rt_err_t qspi_init()
 }
 
 /*write cmd example message improvement*/
-rt_err_t qspi_sample()
+static int qspi_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_err_t res = RT_EOK;
     rt_size_t trans_res = 0;
 

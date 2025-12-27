@@ -77,7 +77,7 @@ static uint8_t spi_write_for_response(uint8_t data)
     return val;
 }
 
-static int cmd_spi_init(int argc, char *argv[])
+static int cmd_spi_init(int argc, char **argv)
 {
     uint8_t spre_spr, cpol, cpha;
     switch (argc)
@@ -96,6 +96,7 @@ static int cmd_spi_init(int argc, char *argv[])
         printf("\nusage : cmd_spi_init spre_spr <cpol> <cpha>\n(cmd_spi_init 0x4 0x0 0x0)\n0x4:div8 0xb:div4096\n");
         break;
     }
+    return 0;
 }
 MSH_CMD_EXPORT(cmd_spi_init, cmd_spi_init);
 
@@ -113,6 +114,7 @@ static int cmd_spi_set_csn(int argc, char *argv[])
         printf("usage:cmd_spi_set_csn csn val\n(0xbf for csn1 enable,0xff for csn1 disable)\n");
         break;
     }
+    return 0;
 }
 MSH_CMD_EXPORT(cmd_spi_set_csn, cmd_spi_set_csn);
 
@@ -130,6 +132,7 @@ static int cmd_spi_write(int argc, char *argv[])
         printf("usage:cmd_spi_write data\n");
         break;
     }
+    return 0;
 }
 MSH_CMD_EXPORT(cmd_spi_write, cmd_spi_write);
 

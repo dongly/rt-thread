@@ -384,8 +384,10 @@ INIT_DEVICE_EXPORT(mcu_pwm_init);
 
 struct rt_device_pwm *pwm_dev;
 
-static int pwm_led_sample(int argc, char *argv[])
+static int pwm_led_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_uint32_t period, pulse, dir;
 
     period = 50000;   /* 50ms*/

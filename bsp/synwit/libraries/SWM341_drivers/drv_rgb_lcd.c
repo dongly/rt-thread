@@ -191,8 +191,10 @@ __exit:
 }
 INIT_BOARD_EXPORT(swm_rgb_lcd_init);
 
-int lcd_test(void)
+static int lcd_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     struct swm_rgb_lcd_device *rgb_lcd;
     rgb_lcd = (struct swm_rgb_lcd_device *)rt_device_find("rgb_lcd");
 

@@ -233,8 +233,10 @@ INIT_BOARD_EXPORT(rt_hw_adc_init);
 #define SAMPLE_ADC_CHANNEL_1   1
 #define SAMPLE_ADC_CHANNEL_5   5
 
-void saadc_sample(void)
+static int saadc_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     drv_nrfx_saadc_channel_t channel_config;
     rt_uint32_t result;
 
@@ -278,6 +280,7 @@ void saadc_sample(void)
         rt_kprintf("\r\n");
         rt_thread_mdelay(1000);
     }
+    return 0;
 }
 MSH_CMD_EXPORT(saadc_sample, saadc sample);
 

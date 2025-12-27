@@ -26,7 +26,7 @@ static void disable_clock(void)
     __HAL_RCC_GPIOH_CLK_DISABLE();
 }
 
-static int rcc_sample(int argc, char *argv[])
+static int rcc_sample(int argc, char **argv)
 {
     if (argc > 1)
     {

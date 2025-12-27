@@ -141,9 +141,12 @@ void rt_hw_board_init(void)
 #endif
 }
 
-static void ft_reset(void)
+static int ft_reset(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     FPsci_Reset();
+    return 0;
 }
 MSH_CMD_EXPORT_ALIAS(ft_reset, ft_reset, ft_reset);
 

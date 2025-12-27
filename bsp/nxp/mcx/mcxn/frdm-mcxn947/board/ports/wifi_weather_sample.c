@@ -184,12 +184,15 @@ free_session_exit:
     webclient_close(session);
 }
 
-static void wifi_weather_sample(void)
+static int wifi_weather_sample(int argc, char **argv)
 {
     /* wifi join */;
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     get_weather_forecast();
     rt_kprintf("\r\n");
     rt_kprintf("wifi_weather_sample complete\r\n");
+    return 0;
 }
 
 MSH_CMD_EXPORT(wifi_weather_sample, wifi weather sample);

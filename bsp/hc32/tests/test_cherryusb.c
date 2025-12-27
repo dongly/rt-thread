@@ -113,10 +113,13 @@ static int cherryusb_host_init(void)
 INIT_APP_EXPORT(cherryusb_host_init);
 
 #if defined(RT_CHERRYUSB_HOST_CDC_ECM) || defined(RT_CHERRYUSB_HOST_CDC_RNDIS)
-void ipconfig(void)
+static int ipconfig(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     extern void list_if(void);
     list_if();
+    return 0;
 }
 MSH_CMD_EXPORT(ipconfig, list network interface information);
 #endif
@@ -148,8 +151,11 @@ INIT_APP_EXPORT(cherryusb_device_cdc_acm_init);
 
 static void cherryusb_cdc_send(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     extern void cdc_acm_data_send_with_dtr_test(uint8_t busid);
     cdc_acm_data_send_with_dtr_test(0);
+    return 0;
 }
 MSH_CMD_EXPORT(cherryusb_cdc_send, cdc acm data send with dtr test);
 

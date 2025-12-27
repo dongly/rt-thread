@@ -426,8 +426,10 @@ static void lcd_thread(void *arg)
         rt_thread_mdelay(1000);
     }
 }
-int lcd_test(void)
+static int lcd_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     struct drv_lcd_device *lcd;
     lcd = (struct drv_lcd_device *)rt_device_find("lcd");
     if(lcd == RT_NULL)

@@ -1,0 +1,2909 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import os
+import re
+import json
+from pathlib import Path
+from typing import List, Dict, Optional, Tuple
+
+class MSHFunctionChecker:
+    def __init__(self, root_path: str):
+        self.root_path = Path(root_path)
+        self.results = []
+        self.violation_stats = {
+            '函数签名错误': 0,
+            '参数argc未使用且未标记RT_UNUSED': 0,
+            '参数argv未使用且未标记RT_UNUSED': 0,
+            '函数缺少返回语句': 0,
+            '返回类型不是int': 0,
+            '函数声明返回int但return语句无返回值': 0,
+            '找不到函数定义': 0,
+            '静态函数数量': 0,
+            '非静态函数在头文件中无声明': 0,
+            '非静态函数在头文件中有声明': 0
+        }
+    
+    def find_c_files(self) -> List[Path]:
+        """查找所有C文件"""
+        c_files = []
+        for root, dirs, files in os.walk(self.root_path):
+            dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ['build', 'output']]
+            for file in files:
+                if file.endswith(('.c', '.h')):
+                    c_files.append(Path(root) / file)
+        return c_files
+    
+    def extract_msh_exports(self, file_path: Path) -> List[Dict]:
+        """提取文件中的MSH_CMD_EXPORT声明"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        functions = []
+        content_no_comments = re.sub(r'//.*$', '', content, flags=re.MULTILINE)
+        content_no_comments = re.sub(r'/\*.*?\*/', '', content_no_comments, flags=re.DOTALL)
+        
+        pattern = r'MSH_CMD_EXPORT(?:_ALIAS)?\s*\(\s*([^,]+),\s*([^,]+)(?:,\s*([^)]+))?\s*\)\s*;'
+        matches = re.finditer(pattern, content_no_comments)
+        
+        for match in matches:
+            func_name = match.group(1).strip()
+            cmd_name = match.group(2).strip()
+            description = match.group(3).strip() if match.group(3) else cmd_name
+            
+            export_pattern = r'MSH_CMD_EXPORT(?:_ALIAS)?\s*\(\s*' + re.escape(func_name) + r'\s*,'
+            export_match = re.search(export_pattern, content)
+            line_num = content[:export_match.start()].count('\n') + 1 if export_match else content_no_comments[:match.start()].count('\n') + 1
+            
+            functions.append({
+                'file': str(file_path),
+                'function_name': func_name,
+                'command_name': cmd_name,
+                'description': description,
+                'line_number': line_num
+            })
+        
+        return functions
+    
+    def find_function_definition(self, file_path: Path, func_name: str) -> Optional[Dict]:
+        """查找函数定义"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return None
+        
+        content_no_comments = re.sub(r'//.*$', '', content, flags=re.MULTILINE)
+        content_no_comments = re.sub(r'/\*.*?\*/', '', content_no_comments, flags=re.DOTALL)
+        
+        pattern = r'(?:^|\n)\s*(?:static\s+)?(?:inline\s+)?(\w+(?:\s*\*)*)\s+' + re.escape(func_name) + r'\s*\(\s*([^)]*?)\s*\)\s*\{'
+        
+        match = re.search(pattern, content_no_comments, re.MULTILINE)
+        if match and match.group(1):
+            lines = content.split('\n')
+            line_number = -1
+            is_static = False
+            
+            for i, line in enumerate(lines):
+                if re.search(r'^\s*(?:static\s+)?(?:inline\s+)?\w+(?:\s*\*)*\s*' + re.escape(func_name) + r'\s*\(', line):
+                    line_number = i + 1
+                    if re.search(r'^\s*static\s+', line):
+                        is_static = True
+                    break
+            
+            if line_number == -1:
+                func_pattern_simple = r'\b' + re.escape(func_name) + r'\s*\('
+                func_match_simple = re.search(func_pattern_simple, content)
+                line_number = content[:func_match_simple.start()].count('\n') + 1 if func_match_simple else content_no_comments[:match.start()].count('\n') + 1
+            
+            return {
+                'return_type': match.group(1).strip(),
+                'parameters': match.group(2).strip() if match.group(2) else "",
+                'line_number': line_number,
+                'is_static': is_static
+            }
+        
+        return None
+    
+    def check_function_signature(self, func_def: Dict) -> List[str]:
+        """检查函数参数签名规范"""
+        issues = []
+        
+        expected_params = "int argc, char **argv"
+        if func_def['parameters'] != expected_params:
+            issues.append(f"参数应该是'{expected_params}'，当前是'{func_def['parameters']}'")
+        
+        return issues
+    
+    def check_return_type(self, func_def: Dict) -> List[str]:
+        """检查返回类型规范"""
+        issues = []
+        
+        if func_def['return_type'] != 'int':
+            issues.append(f"返回类型应该是'int'，当前是'{func_def['return_type']}'")
+        
+        return issues
+    
+    def check_return_statement_consistency(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查返回语句与返回类型的一致性（如：返回类型为int但return语句无返回值）"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return []
+        
+        # 检查返回语句的一致性
+        # 如果返回类型是int，则所有return语句都应该有返回值
+        if func_def['return_type'] == 'int':
+            for i in range(func_body_start, func_body_end + 1):
+                line = lines[i]
+                # 匹配无返回值的return语句（return后面是;、空格、注释或换行）
+                if re.search(r'\breturn\s*;\s*(?://.*)?
+    
+    def check_rt_unused_usage(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查RT_UNUSED使用情况"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return []
+        
+        # 检查参数使用情况
+        argc_used = any(re.search(r'\bargc\b', line) and not re.search(r'//.*\bargc\b', line) 
+                      for i in range(func_body_start, func_body_end + 1) for line in [lines[i]])
+        argv_used = any(re.search(r'\bargv\b', line) and not re.search(r'//.*\bargv\b', line) 
+                      for i in range(func_body_start, func_body_end + 1) for line in [lines[i]])
+        
+        # 检查RT_UNUSED标记
+        func_line = lines[start_line]
+        params_section = re.search(r'\(([^)]*)\)', func_line)
+        has_rt_unused_argc = params_section and 'RT_UNUSED' in params_section.group(1) and 'argc' in params_section.group(1)
+        has_rt_unused_argv = params_section and 'RT_UNUSED' in params_section.group(1) and 'argv' in params_section.group(1)
+        
+        func_body_content = '\n'.join(lines[func_body_start+1:func_body_end])
+        if 'RT_UNUSED(argc)' in func_body_content:
+            has_rt_unused_argc = True
+        if 'RT_UNUSED(argv)' in func_body_content:
+            has_rt_unused_argv = True
+        
+        if not argc_used and not has_rt_unused_argc:
+            issues.append("参数argc未使用且未标记RT_UNUSED")
+        if not argv_used and not has_rt_unused_argv:
+            issues.append("参数argv未使用且未标记RT_UNUSED")
+        
+        return issues
+    
+    def check_return_statement(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查返回语句"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return ["无法找到函数体"]
+        
+        # 检查返回语句
+        has_return = any(re.search(r'\breturn\b', lines[i]) for i in range(func_body_start, func_body_end + 1))
+        
+        if not has_return:
+            issues.append("函数缺少返回语句")
+        
+        return issues
+    
+    def check_header_declaration(self, file_path: Path, func_name: str, func_def: Dict) -> Tuple[List[str], Optional[Dict]]:
+        """检查非静态函数是否在头文件中有声明"""
+        issues = []
+        header_info = None
+        
+        if func_def and not func_def.get('is_static', False):
+            header_file = self.find_header_file(file_path)
+            if not header_file:
+                issues.append("非静态函数在头文件中无声明")
+                return issues, header_info
+            
+            try:
+                with open(header_file, 'r', encoding='utf-8', errors='ignore') as f:
+                    header_content = f.read()
+            except Exception:
+                issues.append(f"无法读取头文件: {header_file}")
+                return issues, header_info
+            
+            header_content_no_comments = re.sub(r'//.*$', '', header_content, flags=re.MULTILINE)
+            header_content_no_comments = re.sub(r'/\*.*?\*/', '', header_content_no_comments, flags=re.DOTALL)
+            
+            return_type = func_def.get('return_type', '')
+            declaration_pattern = rf'(?:^|\n)\s*{re.escape(return_type)}\s+{re.escape(func_name)}\s*\([^)]*\)\s*;'
+            
+            match = re.search(declaration_pattern, header_content_no_comments, re.MULTILINE)
+            if match:
+                func_pattern_in_original = r'\b' + re.escape(func_name) + r'\s*\('
+                func_match_in_original = re.search(func_pattern_in_original, header_content)
+                line_num = header_content[:func_match_in_original.start()].count('\n') + 1 if func_match_in_original else header_content[:match.start()].count('\n') + 1
+                
+                header_info = {
+                    'header_file': str(header_file),
+                    'line_number': line_num
+                }
+                issues.append("非静态函数在头文件中有声明")
+            else:
+                issues.append("非静态函数在头文件中无声明")
+        
+        return issues, header_info
+    
+    def find_header_file(self, source_file) -> Optional[Path]:
+        """查找源文件对应的头文件"""
+        if isinstance(source_file, str):
+            source_file = Path(source_file)
+        
+        if source_file.suffix == '.c':
+            header_file = source_file.with_suffix('.h')
+            if header_file.exists():
+                return header_file
+        
+        source_dir = source_file.parent
+        source_name = source_file.stem
+        potential_header = source_dir / f"{source_name}.h"
+        if potential_header.exists():
+            return potential_header
+        
+        return None
+    
+    def merge_signature_issues(self, issues: List[str]) -> List[str]:
+        """合并签名相关的问题"""
+        merged = []
+        signature_issues = []
+        
+        for issue in issues:
+            if '返回类型应该是' in issue or '参数应该是' in issue:
+                signature_issues.append(issue)
+            else:
+                merged.append(issue)
+        
+        if signature_issues:
+            merged.append("函数签名不符合规范：返回类型应为'int'，参数应为'int argc, char **argv'")
+        
+        return merged
+    
+    def get_relative_path(self, file_path: str) -> str:
+        """获取相对路径"""
+        if file_path.startswith('/home/dongly/rt-thread/'):
+            return file_path[len('/home/dongly/rt-thread/'):]
+        return file_path
+    
+    def check_all_functions(self) -> Dict:
+        """检查所有MSH函数"""
+        print("正在扫描所有C文件...")
+        c_files = self.find_c_files()
+        print(f"找到 {len(c_files)} 个C文件")
+        
+        for file_path in c_files:
+            file_path_str = str(file_path)
+            relative_path = self.get_relative_path(file_path_str)
+            print(f"检查文件: {relative_path}")
+            
+            msh_exports = self.extract_msh_exports(file_path)
+            
+            for export in msh_exports:
+                func_def = self.find_function_definition(file_path, export['function_name'])
+                
+                if not func_def:
+                    issues = [f"找不到函数定义: {export['function_name']}"]
+                    self.violation_stats['找不到函数定义'] += 1
+                else:
+                    # 检查各项规范
+                    signature_issues = self.check_function_signature(func_def)
+                    return_type_issues = self.check_return_type(func_def)
+                    return_consistency_issues = self.check_return_statement_consistency(file_path, func_def)
+                    rt_unused_issues = self.check_rt_unused_usage(file_path, func_def)
+                    return_issues = self.check_return_statement(file_path, func_def)
+                    header_issues, header_info = self.check_header_declaration(file_path, export['function_name'], func_def)
+                    
+                    all_issues = signature_issues + return_type_issues + return_consistency_issues + rt_unused_issues + return_issues + header_issues
+                    issues = self.merge_signature_issues(all_issues)
+                    
+                    # 统计违规类型
+                    for issue in issues:
+                        if '函数签名不符合规范' in issue:
+                            self.violation_stats['函数签名错误'] += 1
+                        elif '参数argc未使用且未标记RT_UNUSED' in issue:
+                            self.violation_stats['参数argc未使用且未标记RT_UNUSED'] += 1
+                        elif '参数argv未使用且未标记RT_UNUSED' in issue:
+                            self.violation_stats['参数argv未使用且未标记RT_UNUSED'] += 1
+                        elif '函数缺少返回语句' in issue:
+                            self.violation_stats['函数缺少返回语句'] += 1
+                        elif '返回类型应该是'int'' in issue:
+                            self.violation_stats['返回类型不是int'] += 1
+                        elif '函数声明返回int但return语句无返回值' in issue:
+                            self.violation_stats['函数声明返回int但return语句无返回值'] += 1
+                        elif '找不到函数定义' in issue:
+                            self.violation_stats['找不到函数定义'] += 1
+                        elif '非静态函数在头文件中无声明' in issue:
+                            self.violation_stats['非静态函数在头文件中无声明'] += 1
+                        elif '非静态函数在头文件中有声明' in issue:
+                            self.violation_stats['非静态函数在头文件中有声明'] += 1
+                    
+                    # 统计静态函数
+                    if func_def.get('is_static', False):
+                        self.violation_stats['静态函数数量'] += 1
+                
+                # 实时显示违规内容
+                if issues:
+                    relative_path = self.get_relative_path(export['file'])
+                    
+                    if func_def:
+                        modifiers = ["static"] if func_def.get('is_static', False) else []
+                        modifier_str = " ".join(modifiers) + " " if modifiers else ""
+                        signature = f"{modifier_str}{func_def['return_type']} {export['function_name']}({func_def['parameters']})"
+                        def_line = func_def['line_number']
+                    else:
+                        signature = f"找不到定义: {export['function_name']}()"
+                        def_line = "未知"
+                    
+                    export_line = export['line_number']
+                    
+                    print(f"\n❌ 违规函数: {signature}")
+                    print(f"   声明位置: {relative_path}:{export_line}")
+                    print(f"   定义位置: {relative_path}:{def_line}")
+                    print("   违规内容:")
+                    for issue in issues:
+                        print(f"     - {issue}")
+                
+                # 保存结果
+                self.results.append({
+                    'function': export,
+                    'definition': func_def,
+                    'issues': issues,
+                    'is_compliant': len(issues) == 0
+                })
+        
+        total_functions = len(self.results)
+        compliant_functions = len([r for r in self.results if r['is_compliant']])
+        
+        return {
+            'total_functions': total_functions,
+            'compliant_functions': compliant_functions,
+            'non_compliant_functions': total_functions - compliant_functions,
+            'violation_stats': self.violation_stats,
+            'results': self.results
+        }
+    
+    def save_report(self, report: Dict, output_file: str):
+        """保存报告到文件"""
+        # 保存JSON报告
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
+        
+        # 生成Markdown报告
+        md_file = output_file.replace('.json', '.md')
+        with open(md_file, 'w', encoding='utf-8') as f:
+            f.write("# MSH函数规范检查报告\n\n")
+            f.write("## 统计信息\n\n")
+            f.write(f"- 总函数数: {report['total_functions']}\n")
+            f.write(f"- 符合规范的函数: {report['compliant_functions']}\n")
+            f.write(f"- 不符合规范的函数: {report['non_compliant_functions']}\n\n")
+            
+            f.write("## 违规统计\n\n")
+            for violation_type, count in report['violation_stats'].items():
+                if count > 0:
+                    f.write(f"- {violation_type}: {count}\n")
+            f.write("\n")
+            
+            f.write("## 检查结果\n\n")
+            
+            for result in report['results']:
+                status_icon = "✅" if result['is_compliant'] else "❌"
+                relative_path = self.get_relative_path(result['function']['file'])
+                
+                if result['definition']:
+                    modifiers = ["static"] if result['definition'].get('is_static', False) else []
+                    modifier_str = " ".join(modifiers) + " " if modifiers else ""
+                    signature = f"{modifier_str}{result['definition']['return_type']} {result['function']['function_name']}({result['definition']['parameters']})"
+                else:
+                    signature = f"找不到定义: {result['function']['function_name']}()"
+                
+                f.write(f"{status_icon} {signature}\n")
+                f.write(f"  声明: {relative_path}:{result['function']['line_number']}\n")
+                
+                if result['definition']:
+                    f.write(f"  定义: {relative_path}:{result['definition']['line_number']}\n")
+                else:
+                    f.write(f"  定义: 未找到\n")
+                
+                if not result['is_compliant'] and result['issues']:
+                    f.write("  问题:\n")
+                    for issue in result['issues']:
+                        f.write(f"    - {issue}\n")
+                
+                f.write("\n")
+
+if __name__ == "__main__":
+    checker = MSHFunctionChecker("/home/dongly/rt-thread")
+    report = checker.check_all_functions()
+    checker.save_report(report, "msh_function_check_report.json")
+    
+    print(f"\n检查完成!")
+    print(f"总函数数: {report['total_functions']}")
+    print(f"静态函数数量: {report['violation_stats'].get('静态函数数量', 0)}")
+    print(f"符合规范的函数: {report['compliant_functions']}")
+    print(f"不符合规范的函数: {report['non_compliant_functions']}")
+    
+    print(f"\n违规明细统计:")
+    for violation_type, count in report['violation_stats'].items():
+        if violation_type != "静态函数数量":
+            print(f"- {violation_type}: {count}")
+    
+    print(f"\n报告已保存到: msh_function_check_report.json 和 msh_function_check_report.md"), line):
+                    issues.append("函数声明返回int但return语句无返回值")
+                    break
+        
+        return issues
+    
+    def check_rt_unused_usage(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查RT_UNUSED使用情况"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return []
+        
+        # 检查参数使用情况
+        argc_used = any(re.search(r'\bargc\b', line) and not re.search(r'//.*\bargc\b', line) 
+                      for i in range(func_body_start, func_body_end + 1) for line in [lines[i]])
+        argv_used = any(re.search(r'\bargv\b', line) and not re.search(r'//.*\bargv\b', line) 
+                      for i in range(func_body_start, func_body_end + 1) for line in [lines[i]])
+        
+        # 检查RT_UNUSED标记
+        func_line = lines[start_line]
+        params_section = re.search(r'\(([^)]*)\)', func_line)
+        has_rt_unused_argc = params_section and 'RT_UNUSED' in params_section.group(1) and 'argc' in params_section.group(1)
+        has_rt_unused_argv = params_section and 'RT_UNUSED' in params_section.group(1) and 'argv' in params_section.group(1)
+        
+        func_body_content = '\n'.join(lines[func_body_start+1:func_body_end])
+        if 'RT_UNUSED(argc)' in func_body_content:
+            has_rt_unused_argc = True
+        if 'RT_UNUSED(argv)' in func_body_content:
+            has_rt_unused_argv = True
+        
+        if not argc_used and not has_rt_unused_argc:
+            issues.append("参数argc未使用且未标记RT_UNUSED")
+        if not argv_used and not has_rt_unused_argv:
+            issues.append("参数argv未使用且未标记RT_UNUSED")
+        
+        return issues
+    
+    def check_return_statement(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查返回语句"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return ["无法找到函数体"]
+        
+        # 检查返回语句
+        has_return = any(re.search(r'\breturn\b', lines[i]) for i in range(func_body_start, func_body_end + 1))
+        
+        if not has_return:
+            issues.append("函数缺少返回语句")
+        
+        return issues
+    
+    def check_header_declaration(self, file_path: Path, func_name: str, func_def: Dict) -> Tuple[List[str], Optional[Dict]]:
+        """检查非静态函数是否在头文件中有声明"""
+        issues = []
+        header_info = None
+        
+        if func_def and not func_def.get('is_static', False):
+            header_file = self.find_header_file(file_path)
+            if not header_file:
+                issues.append("非静态函数在头文件中无声明")
+                return issues, header_info
+            
+            try:
+                with open(header_file, 'r', encoding='utf-8', errors='ignore') as f:
+                    header_content = f.read()
+            except Exception:
+                issues.append(f"无法读取头文件: {header_file}")
+                return issues, header_info
+            
+            header_content_no_comments = re.sub(r'//.*$', '', header_content, flags=re.MULTILINE)
+            header_content_no_comments = re.sub(r'/\*.*?\*/', '', header_content_no_comments, flags=re.DOTALL)
+            
+            return_type = func_def.get('return_type', '')
+            declaration_pattern = rf'(?:^|\n)\s*{re.escape(return_type)}\s+{re.escape(func_name)}\s*\([^)]*\)\s*;'
+            
+            match = re.search(declaration_pattern, header_content_no_comments, re.MULTILINE)
+            if match:
+                func_pattern_in_original = r'\b' + re.escape(func_name) + r'\s*\('
+                func_match_in_original = re.search(func_pattern_in_original, header_content)
+                line_num = header_content[:func_match_in_original.start()].count('\n') + 1 if func_match_in_original else header_content[:match.start()].count('\n') + 1
+                
+                header_info = {
+                    'header_file': str(header_file),
+                    'line_number': line_num
+                }
+                issues.append("非静态函数在头文件中有声明")
+            else:
+                issues.append("非静态函数在头文件中无声明")
+        
+        return issues, header_info
+    
+    def find_header_file(self, source_file) -> Optional[Path]:
+        """查找源文件对应的头文件"""
+        if isinstance(source_file, str):
+            source_file = Path(source_file)
+        
+        if source_file.suffix == '.c':
+            header_file = source_file.with_suffix('.h')
+            if header_file.exists():
+                return header_file
+        
+        source_dir = source_file.parent
+        source_name = source_file.stem
+        potential_header = source_dir / f"{source_name}.h"
+        if potential_header.exists():
+            return potential_header
+        
+        return None
+    
+    def merge_signature_issues(self, issues: List[str]) -> List[str]:
+        """合并签名相关的问题"""
+        merged = []
+        signature_issues = []
+        
+        for issue in issues:
+            if '返回类型应该是' in issue or '参数应该是' in issue:
+                signature_issues.append(issue)
+            else:
+                merged.append(issue)
+        
+        if signature_issues:
+            merged.append("函数签名不符合规范：返回类型应为'int'，参数应为'int argc, char **argv'")
+        
+        return merged
+    
+    def get_relative_path(self, file_path: str) -> str:
+        """获取相对路径"""
+        if file_path.startswith('/home/dongly/rt-thread/'):
+            return file_path[len('/home/dongly/rt-thread/'):]
+        return file_path
+    
+    def check_all_functions(self) -> Dict:
+        """检查所有MSH函数"""
+        print("正在扫描所有C文件...")
+        c_files = self.find_c_files()
+        print(f"找到 {len(c_files)} 个C文件")
+        
+        for file_path in c_files:
+            file_path_str = str(file_path)
+            relative_path = self.get_relative_path(file_path_str)
+            print(f"检查文件: {relative_path}")
+            
+            msh_exports = self.extract_msh_exports(file_path)
+            
+            for export in msh_exports:
+                func_def = self.find_function_definition(file_path, export['function_name'])
+                
+                if not func_def:
+                    issues = [f"找不到函数定义: {export['function_name']}"]
+                    self.violation_stats['找不到函数定义'] += 1
+                else:
+                    # 检查各项规范
+                    signature_issues = self.check_function_signature(func_def)
+                    return_type_issues = self.check_return_type(func_def)
+                    return_consistency_issues = self.check_return_statement_consistency(file_path, func_def)
+                    rt_unused_issues = self.check_rt_unused_usage(file_path, func_def)
+                    return_issues = self.check_return_statement(file_path, func_def)
+                    header_issues, header_info = self.check_header_declaration(file_path, export['function_name'], func_def)
+                    
+                    all_issues = signature_issues + return_type_issues + return_consistency_issues + rt_unused_issues + return_issues + header_issues
+                    issues = self.merge_signature_issues(all_issues)
+                    
+                    # 统计违规类型
+                    for issue in issues:
+                        if '函数签名不符合规范' in issue:
+                            self.violation_stats['函数签名错误'] += 1
+                        elif '参数argc未使用且未标记RT_UNUSED' in issue:
+                            self.violation_stats['参数argc未使用且未标记RT_UNUSED'] += 1
+                        elif '参数argv未使用且未标记RT_UNUSED' in issue:
+                            self.violation_stats['参数argv未使用且未标记RT_UNUSED'] += 1
+                        elif '函数缺少返回语句' in issue:
+                            self.violation_stats['函数缺少返回语句'] += 1
+                        elif '返回类型应该是'int'' in issue:
+                            self.violation_stats['返回类型不是int'] += 1
+                        elif '函数声明返回int但return语句无返回值' in issue:
+                            self.violation_stats['函数声明返回int但return语句无返回值'] += 1
+                        elif '找不到函数定义' in issue:
+                            self.violation_stats['找不到函数定义'] += 1
+                        elif '非静态函数在头文件中无声明' in issue:
+                            self.violation_stats['非静态函数在头文件中无声明'] += 1
+                        elif '非静态函数在头文件中有声明' in issue:
+                            self.violation_stats['非静态函数在头文件中有声明'] += 1
+                    
+                    # 统计静态函数
+                    if func_def.get('is_static', False):
+                        self.violation_stats['静态函数数量'] += 1
+                
+                # 实时显示违规内容
+                if issues:
+                    relative_path = self.get_relative_path(export['file'])
+                    
+                    if func_def:
+                        modifiers = ["static"] if func_def.get('is_static', False) else []
+                        modifier_str = " ".join(modifiers) + " " if modifiers else ""
+                        signature = f"{modifier_str}{func_def['return_type']} {export['function_name']}({func_def['parameters']})"
+                        def_line = func_def['line_number']
+                    else:
+                        signature = f"找不到定义: {export['function_name']}()"
+                        def_line = "未知"
+                    
+                    export_line = export['line_number']
+                    
+                    print(f"\n❌ 违规函数: {signature}")
+                    print(f"   声明位置: {relative_path}:{export_line}")
+                    print(f"   定义位置: {relative_path}:{def_line}")
+                    print("   违规内容:")
+                    for issue in issues:
+                        print(f"     - {issue}")
+                
+                # 保存结果
+                self.results.append({
+                    'function': export,
+                    'definition': func_def,
+                    'issues': issues,
+                    'is_compliant': len(issues) == 0
+                })
+        
+        total_functions = len(self.results)
+        compliant_functions = len([r for r in self.results if r['is_compliant']])
+        
+        return {
+            'total_functions': total_functions,
+            'compliant_functions': compliant_functions,
+            'non_compliant_functions': total_functions - compliant_functions,
+            'violation_stats': self.violation_stats,
+            'results': self.results
+        }
+    
+    def save_report(self, report: Dict, output_file: str):
+        """保存报告到文件"""
+        # 保存JSON报告
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
+        
+        # 生成Markdown报告
+        md_file = output_file.replace('.json', '.md')
+        with open(md_file, 'w', encoding='utf-8') as f:
+            f.write("# MSH函数规范检查报告\n\n")
+            f.write("## 统计信息\n\n")
+            f.write(f"- 总函数数: {report['total_functions']}\n")
+            f.write(f"- 符合规范的函数: {report['compliant_functions']}\n")
+            f.write(f"- 不符合规范的函数: {report['non_compliant_functions']}\n\n")
+            
+            f.write("## 违规统计\n\n")
+            for violation_type, count in report['violation_stats'].items():
+                if count > 0:
+                    f.write(f"- {violation_type}: {count}\n")
+            f.write("\n")
+            
+            f.write("## 检查结果\n\n")
+            
+            for result in report['results']:
+                status_icon = "✅" if result['is_compliant'] else "❌"
+                relative_path = self.get_relative_path(result['function']['file'])
+                
+                if result['definition']:
+                    modifiers = ["static"] if result['definition'].get('is_static', False) else []
+                    modifier_str = " ".join(modifiers) + " " if modifiers else ""
+                    signature = f"{modifier_str}{result['definition']['return_type']} {result['function']['function_name']}({result['definition']['parameters']})"
+                else:
+                    signature = f"找不到定义: {result['function']['function_name']}()"
+                
+                f.write(f"{status_icon} {signature}\n")
+                f.write(f"  声明: {relative_path}:{result['function']['line_number']}\n")
+                
+                if result['definition']:
+                    f.write(f"  定义: {relative_path}:{result['definition']['line_number']}\n")
+                else:
+                    f.write(f"  定义: 未找到\n")
+                
+                if not result['is_compliant'] and result['issues']:
+                    f.write("  问题:\n")
+                    for issue in result['issues']:
+                        f.write(f"    - {issue}\n")
+                
+                f.write("\n")
+
+if __name__ == "__main__":
+    checker = MSHFunctionChecker("/home/dongly/rt-thread")
+    report = checker.check_all_functions()
+    checker.save_report(report, "msh_function_check_report.json")
+    
+    print(f"\n检查完成!")
+    print(f"总函数数: {report['total_functions']}")
+    print(f"静态函数数量: {report['violation_stats'].get('静态函数数量', 0)}")
+    print(f"符合规范的函数: {report['compliant_functions']}")
+    print(f"不符合规范的函数: {report['non_compliant_functions']}")
+    
+    print(f"\n违规明细统计:")
+    for violation_type, count in report['violation_stats'].items():
+        if violation_type != "静态函数数量":
+            print(f"- {violation_type}: {count}")
+    
+    print(f"\n报告已保存到: msh_function_check_report.json 和 msh_function_check_report.md"), line):
+    
+    def check_rt_unused_usage(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查RT_UNUSED使用情况"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return []
+        
+        # 检查参数使用情况
+        argc_used = any(re.search(r'\bargc\b', line) and not re.search(r'//.*\bargc\b', line) 
+                      for i in range(func_body_start, func_body_end + 1) for line in [lines[i]])
+        argv_used = any(re.search(r'\bargv\b', line) and not re.search(r'//.*\bargv\b', line) 
+                      for i in range(func_body_start, func_body_end + 1) for line in [lines[i]])
+        
+        # 检查RT_UNUSED标记
+        func_line = lines[start_line]
+        params_section = re.search(r'\(([^)]*)\)', func_line)
+        has_rt_unused_argc = params_section and 'RT_UNUSED' in params_section.group(1) and 'argc' in params_section.group(1)
+        has_rt_unused_argv = params_section and 'RT_UNUSED' in params_section.group(1) and 'argv' in params_section.group(1)
+        
+        func_body_content = '\n'.join(lines[func_body_start+1:func_body_end])
+        if 'RT_UNUSED(argc)' in func_body_content:
+            has_rt_unused_argc = True
+        if 'RT_UNUSED(argv)' in func_body_content:
+            has_rt_unused_argv = True
+        
+        if not argc_used and not has_rt_unused_argc:
+            issues.append("参数argc未使用且未标记RT_UNUSED")
+        if not argv_used and not has_rt_unused_argv:
+            issues.append("参数argv未使用且未标记RT_UNUSED")
+        
+        return issues
+    
+    def check_return_statement(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查返回语句"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return ["无法找到函数体"]
+        
+        # 检查返回语句
+        has_return = any(re.search(r'\breturn\b', lines[i]) for i in range(func_body_start, func_body_end + 1))
+        
+        if not has_return:
+            issues.append("函数缺少返回语句")
+        
+        return issues
+    
+    def check_header_declaration(self, file_path: Path, func_name: str, func_def: Dict) -> Tuple[List[str], Optional[Dict]]:
+        """检查非静态函数是否在头文件中有声明"""
+        issues = []
+        header_info = None
+        
+        if func_def and not func_def.get('is_static', False):
+            header_file = self.find_header_file(file_path)
+            if not header_file:
+                issues.append("非静态函数在头文件中无声明")
+                return issues, header_info
+            
+            try:
+                with open(header_file, 'r', encoding='utf-8', errors='ignore') as f:
+                    header_content = f.read()
+            except Exception:
+                issues.append(f"无法读取头文件: {header_file}")
+                return issues, header_info
+            
+            header_content_no_comments = re.sub(r'//.*$', '', header_content, flags=re.MULTILINE)
+            header_content_no_comments = re.sub(r'/\*.*?\*/', '', header_content_no_comments, flags=re.DOTALL)
+            
+            return_type = func_def.get('return_type', '')
+            declaration_pattern = rf'(?:^|\n)\s*{re.escape(return_type)}\s+{re.escape(func_name)}\s*\([^)]*\)\s*;'
+            
+            match = re.search(declaration_pattern, header_content_no_comments, re.MULTILINE)
+            if match:
+                func_pattern_in_original = r'\b' + re.escape(func_name) + r'\s*\('
+                func_match_in_original = re.search(func_pattern_in_original, header_content)
+                line_num = header_content[:func_match_in_original.start()].count('\n') + 1 if func_match_in_original else header_content[:match.start()].count('\n') + 1
+                
+                header_info = {
+                    'header_file': str(header_file),
+                    'line_number': line_num
+                }
+                issues.append("非静态函数在头文件中有声明")
+            else:
+                issues.append("非静态函数在头文件中无声明")
+        
+        return issues, header_info
+    
+    def find_header_file(self, source_file) -> Optional[Path]:
+        """查找源文件对应的头文件"""
+        if isinstance(source_file, str):
+            source_file = Path(source_file)
+        
+        if source_file.suffix == '.c':
+            header_file = source_file.with_suffix('.h')
+            if header_file.exists():
+                return header_file
+        
+        source_dir = source_file.parent
+        source_name = source_file.stem
+        potential_header = source_dir / f"{source_name}.h"
+        if potential_header.exists():
+            return potential_header
+        
+        return None
+    
+    def merge_signature_issues(self, issues: List[str]) -> List[str]:
+        """合并签名相关的问题"""
+        merged = []
+        signature_issues = []
+        
+        for issue in issues:
+            if '返回类型应该是' in issue or '参数应该是' in issue:
+                signature_issues.append(issue)
+            else:
+                merged.append(issue)
+        
+        if signature_issues:
+            merged.append("函数签名不符合规范：返回类型应为'int'，参数应为'int argc, char **argv'")
+        
+        return merged
+    
+    def get_relative_path(self, file_path: str) -> str:
+        """获取相对路径"""
+        if file_path.startswith('/home/dongly/rt-thread/'):
+            return file_path[len('/home/dongly/rt-thread/'):]
+        return file_path
+    
+    def check_all_functions(self) -> Dict:
+        """检查所有MSH函数"""
+        print("正在扫描所有C文件...")
+        c_files = self.find_c_files()
+        print(f"找到 {len(c_files)} 个C文件")
+        
+        for file_path in c_files:
+            file_path_str = str(file_path)
+            relative_path = self.get_relative_path(file_path_str)
+            print(f"检查文件: {relative_path}")
+            
+            msh_exports = self.extract_msh_exports(file_path)
+            
+            for export in msh_exports:
+                func_def = self.find_function_definition(file_path, export['function_name'])
+                
+                if not func_def:
+                    issues = [f"找不到函数定义: {export['function_name']}"]
+                    self.violation_stats['找不到函数定义'] += 1
+                else:
+                    # 检查各项规范
+                    signature_issues = self.check_function_signature(func_def)
+                    return_type_issues = self.check_return_type(func_def)
+                    return_consistency_issues = self.check_return_statement_consistency(file_path, func_def)
+                    rt_unused_issues = self.check_rt_unused_usage(file_path, func_def)
+                    return_issues = self.check_return_statement(file_path, func_def)
+                    header_issues, header_info = self.check_header_declaration(file_path, export['function_name'], func_def)
+                    
+                    all_issues = signature_issues + return_type_issues + return_consistency_issues + rt_unused_issues + return_issues + header_issues
+                    issues = self.merge_signature_issues(all_issues)
+                    
+                    # 统计违规类型
+                    for issue in issues:
+                        if '函数签名不符合规范' in issue:
+                            self.violation_stats['函数签名错误'] += 1
+                        elif '参数argc未使用且未标记RT_UNUSED' in issue:
+                            self.violation_stats['参数argc未使用且未标记RT_UNUSED'] += 1
+                        elif '参数argv未使用且未标记RT_UNUSED' in issue:
+                            self.violation_stats['参数argv未使用且未标记RT_UNUSED'] += 1
+                        elif '函数缺少返回语句' in issue:
+                            self.violation_stats['函数缺少返回语句'] += 1
+                        elif '返回类型应该是'int'' in issue:
+                            self.violation_stats['返回类型不是int'] += 1
+                        elif '函数声明返回int但return语句无返回值' in issue:
+                            self.violation_stats['函数声明返回int但return语句无返回值'] += 1
+                        elif '找不到函数定义' in issue:
+                            self.violation_stats['找不到函数定义'] += 1
+                        elif '非静态函数在头文件中无声明' in issue:
+                            self.violation_stats['非静态函数在头文件中无声明'] += 1
+                        elif '非静态函数在头文件中有声明' in issue:
+                            self.violation_stats['非静态函数在头文件中有声明'] += 1
+                    
+                    # 统计静态函数
+                    if func_def.get('is_static', False):
+                        self.violation_stats['静态函数数量'] += 1
+                
+                # 实时显示违规内容
+                if issues:
+                    relative_path = self.get_relative_path(export['file'])
+                    
+                    if func_def:
+                        modifiers = ["static"] if func_def.get('is_static', False) else []
+                        modifier_str = " ".join(modifiers) + " " if modifiers else ""
+                        signature = f"{modifier_str}{func_def['return_type']} {export['function_name']}({func_def['parameters']})"
+                        def_line = func_def['line_number']
+                    else:
+                        signature = f"找不到定义: {export['function_name']}()"
+                        def_line = "未知"
+                    
+                    export_line = export['line_number']
+                    
+                    print(f"\n❌ 违规函数: {signature}")
+                    print(f"   声明位置: {relative_path}:{export_line}")
+                    print(f"   定义位置: {relative_path}:{def_line}")
+                    print("   违规内容:")
+                    for issue in issues:
+                        print(f"     - {issue}")
+                
+                # 保存结果
+                self.results.append({
+                    'function': export,
+                    'definition': func_def,
+                    'issues': issues,
+                    'is_compliant': len(issues) == 0
+                })
+        
+        total_functions = len(self.results)
+        compliant_functions = len([r for r in self.results if r['is_compliant']])
+        
+        return {
+            'total_functions': total_functions,
+            'compliant_functions': compliant_functions,
+            'non_compliant_functions': total_functions - compliant_functions,
+            'violation_stats': self.violation_stats,
+            'results': self.results
+        }
+    
+    def save_report(self, report: Dict, output_file: str):
+        """保存报告到文件"""
+        # 保存JSON报告
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
+        
+        # 生成Markdown报告
+        md_file = output_file.replace('.json', '.md')
+        with open(md_file, 'w', encoding='utf-8') as f:
+            f.write("# MSH函数规范检查报告\n\n")
+            f.write("## 统计信息\n\n")
+            f.write(f"- 总函数数: {report['total_functions']}\n")
+            f.write(f"- 符合规范的函数: {report['compliant_functions']}\n")
+            f.write(f"- 不符合规范的函数: {report['non_compliant_functions']}\n\n")
+            
+            f.write("## 违规统计\n\n")
+            for violation_type, count in report['violation_stats'].items():
+                if count > 0:
+                    f.write(f"- {violation_type}: {count}\n")
+            f.write("\n")
+            
+            f.write("## 检查结果\n\n")
+            
+            for result in report['results']:
+                status_icon = "✅" if result['is_compliant'] else "❌"
+                relative_path = self.get_relative_path(result['function']['file'])
+                
+                if result['definition']:
+                    modifiers = ["static"] if result['definition'].get('is_static', False) else []
+                    modifier_str = " ".join(modifiers) + " " if modifiers else ""
+                    signature = f"{modifier_str}{result['definition']['return_type']} {result['function']['function_name']}({result['definition']['parameters']})"
+                else:
+                    signature = f"找不到定义: {result['function']['function_name']}()"
+                
+                f.write(f"{status_icon} {signature}\n")
+                f.write(f"  声明: {relative_path}:{result['function']['line_number']}\n")
+                
+                if result['definition']:
+                    f.write(f"  定义: {relative_path}:{result['definition']['line_number']}\n")
+                else:
+                    f.write(f"  定义: 未找到\n")
+                
+                if not result['is_compliant'] and result['issues']:
+                    f.write("  问题:\n")
+                    for issue in result['issues']:
+                        f.write(f"    - {issue}\n")
+                
+                f.write("\n")
+
+if __name__ == "__main__":
+    checker = MSHFunctionChecker("/home/dongly/rt-thread")
+    report = checker.check_all_functions()
+    checker.save_report(report, "msh_function_check_report.json")
+    
+    print(f"\n检查完成!")
+    print(f"总函数数: {report['total_functions']}")
+    print(f"静态函数数量: {report['violation_stats'].get('静态函数数量', 0)}")
+    print(f"符合规范的函数: {report['compliant_functions']}")
+    print(f"不符合规范的函数: {report['non_compliant_functions']}")
+    
+    print(f"\n违规明细统计:")
+    for violation_type, count in report['violation_stats'].items():
+        if violation_type != "静态函数数量":
+            print(f"- {violation_type}: {count}")
+    
+    print(f"\n报告已保存到: msh_function_check_report.json 和 msh_function_check_report.md"), line):
+                    issues.append("函数声明返回int但return语句无返回值")
+                    break
+        
+        return issues
+    
+    def check_rt_unused_usage(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查RT_UNUSED使用情况"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return []
+        
+        # 检查参数使用情况
+        argc_used = any(re.search(r'\bargc\b', line) and not re.search(r'//.*\bargc\b', line) 
+                      for i in range(func_body_start, func_body_end + 1) for line in [lines[i]])
+        argv_used = any(re.search(r'\bargv\b', line) and not re.search(r'//.*\bargv\b', line) 
+                      for i in range(func_body_start, func_body_end + 1) for line in [lines[i]])
+        
+        # 检查RT_UNUSED标记
+        func_line = lines[start_line]
+        params_section = re.search(r'\(([^)]*)\)', func_line)
+        has_rt_unused_argc = params_section and 'RT_UNUSED' in params_section.group(1) and 'argc' in params_section.group(1)
+        has_rt_unused_argv = params_section and 'RT_UNUSED' in params_section.group(1) and 'argv' in params_section.group(1)
+        
+        func_body_content = '\n'.join(lines[func_body_start+1:func_body_end])
+        if 'RT_UNUSED(argc)' in func_body_content:
+            has_rt_unused_argc = True
+        if 'RT_UNUSED(argv)' in func_body_content:
+            has_rt_unused_argv = True
+        
+        if not argc_used and not has_rt_unused_argc:
+            issues.append("参数argc未使用且未标记RT_UNUSED")
+        if not argv_used and not has_rt_unused_argv:
+            issues.append("参数argv未使用且未标记RT_UNUSED")
+        
+        return issues
+    
+    def check_return_statement(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查返回语句"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return ["无法找到函数体"]
+        
+        # 检查返回语句
+        has_return = any(re.search(r'\breturn\b', lines[i]) for i in range(func_body_start, func_body_end + 1))
+        
+        if not has_return:
+            issues.append("函数缺少返回语句")
+        
+        return issues
+    
+    def check_header_declaration(self, file_path: Path, func_name: str, func_def: Dict) -> Tuple[List[str], Optional[Dict]]:
+        """检查非静态函数是否在头文件中有声明"""
+        issues = []
+        header_info = None
+        
+        if func_def and not func_def.get('is_static', False):
+            header_file = self.find_header_file(file_path)
+            if not header_file:
+                issues.append("非静态函数在头文件中无声明")
+                return issues, header_info
+            
+            try:
+                with open(header_file, 'r', encoding='utf-8', errors='ignore') as f:
+                    header_content = f.read()
+            except Exception:
+                issues.append(f"无法读取头文件: {header_file}")
+                return issues, header_info
+            
+            header_content_no_comments = re.sub(r'//.*$', '', header_content, flags=re.MULTILINE)
+            header_content_no_comments = re.sub(r'/\*.*?\*/', '', header_content_no_comments, flags=re.DOTALL)
+            
+            return_type = func_def.get('return_type', '')
+            declaration_pattern = rf'(?:^|\n)\s*{re.escape(return_type)}\s+{re.escape(func_name)}\s*\([^)]*\)\s*;'
+            
+            match = re.search(declaration_pattern, header_content_no_comments, re.MULTILINE)
+            if match:
+                func_pattern_in_original = r'\b' + re.escape(func_name) + r'\s*\('
+                func_match_in_original = re.search(func_pattern_in_original, header_content)
+                line_num = header_content[:func_match_in_original.start()].count('\n') + 1 if func_match_in_original else header_content[:match.start()].count('\n') + 1
+                
+                header_info = {
+                    'header_file': str(header_file),
+                    'line_number': line_num
+                }
+                issues.append("非静态函数在头文件中有声明")
+            else:
+                issues.append("非静态函数在头文件中无声明")
+        
+        return issues, header_info
+    
+    def find_header_file(self, source_file) -> Optional[Path]:
+        """查找源文件对应的头文件"""
+        if isinstance(source_file, str):
+            source_file = Path(source_file)
+        
+        if source_file.suffix == '.c':
+            header_file = source_file.with_suffix('.h')
+            if header_file.exists():
+                return header_file
+        
+        source_dir = source_file.parent
+        source_name = source_file.stem
+        potential_header = source_dir / f"{source_name}.h"
+        if potential_header.exists():
+            return potential_header
+        
+        return None
+    
+    def merge_signature_issues(self, issues: List[str]) -> List[str]:
+        """合并签名相关的问题"""
+        merged = []
+        signature_issues = []
+        
+        for issue in issues:
+            if '返回类型应该是' in issue or '参数应该是' in issue:
+                signature_issues.append(issue)
+            else:
+                merged.append(issue)
+        
+        if signature_issues:
+            merged.append("函数签名不符合规范：返回类型应为'int'，参数应为'int argc, char **argv'")
+        
+        return merged
+    
+    def get_relative_path(self, file_path: str) -> str:
+        """获取相对路径"""
+        if file_path.startswith('/home/dongly/rt-thread/'):
+            return file_path[len('/home/dongly/rt-thread/'):]
+        return file_path
+    
+    def check_all_functions(self) -> Dict:
+        """检查所有MSH函数"""
+        print("正在扫描所有C文件...")
+        c_files = self.find_c_files()
+        print(f"找到 {len(c_files)} 个C文件")
+        
+        for file_path in c_files:
+            file_path_str = str(file_path)
+            relative_path = self.get_relative_path(file_path_str)
+            print(f"检查文件: {relative_path}")
+            
+            msh_exports = self.extract_msh_exports(file_path)
+            
+            for export in msh_exports:
+                func_def = self.find_function_definition(file_path, export['function_name'])
+                
+                if not func_def:
+                    issues = [f"找不到函数定义: {export['function_name']}"]
+                    self.violation_stats['找不到函数定义'] += 1
+                else:
+                    # 检查各项规范
+                    signature_issues = self.check_function_signature(func_def)
+                    return_type_issues = self.check_return_type(func_def)
+                    return_consistency_issues = self.check_return_statement_consistency(file_path, func_def)
+                    rt_unused_issues = self.check_rt_unused_usage(file_path, func_def)
+                    return_issues = self.check_return_statement(file_path, func_def)
+                    header_issues, header_info = self.check_header_declaration(file_path, export['function_name'], func_def)
+                    
+                    all_issues = signature_issues + return_type_issues + return_consistency_issues + rt_unused_issues + return_issues + header_issues
+                    issues = self.merge_signature_issues(all_issues)
+                    
+                    # 统计违规类型
+                    for issue in issues:
+                        if '函数签名不符合规范' in issue:
+                            self.violation_stats['函数签名错误'] += 1
+                        elif '参数argc未使用且未标记RT_UNUSED' in issue:
+                            self.violation_stats['参数argc未使用且未标记RT_UNUSED'] += 1
+                        elif '参数argv未使用且未标记RT_UNUSED' in issue:
+                            self.violation_stats['参数argv未使用且未标记RT_UNUSED'] += 1
+                        elif '函数缺少返回语句' in issue:
+                            self.violation_stats['函数缺少返回语句'] += 1
+                        elif '返回类型应该是'int'' in issue:
+                            self.violation_stats['返回类型不是int'] += 1
+                        elif '函数声明返回int但return语句无返回值' in issue:
+                            self.violation_stats['函数声明返回int但return语句无返回值'] += 1
+                        elif '找不到函数定义' in issue:
+                            self.violation_stats['找不到函数定义'] += 1
+                        elif '非静态函数在头文件中无声明' in issue:
+                            self.violation_stats['非静态函数在头文件中无声明'] += 1
+                        elif '非静态函数在头文件中有声明' in issue:
+                            self.violation_stats['非静态函数在头文件中有声明'] += 1
+                    
+                    # 统计静态函数
+                    if func_def.get('is_static', False):
+                        self.violation_stats['静态函数数量'] += 1
+                
+                # 实时显示违规内容
+                if issues:
+                    relative_path = self.get_relative_path(export['file'])
+                    
+                    if func_def:
+                        modifiers = ["static"] if func_def.get('is_static', False) else []
+                        modifier_str = " ".join(modifiers) + " " if modifiers else ""
+                        signature = f"{modifier_str}{func_def['return_type']} {export['function_name']}({func_def['parameters']})"
+                        def_line = func_def['line_number']
+                    else:
+                        signature = f"找不到定义: {export['function_name']}()"
+                        def_line = "未知"
+                    
+                    export_line = export['line_number']
+                    
+                    print(f"\n❌ 违规函数: {signature}")
+                    print(f"   声明位置: {relative_path}:{export_line}")
+                    print(f"   定义位置: {relative_path}:{def_line}")
+                    print("   违规内容:")
+                    for issue in issues:
+                        print(f"     - {issue}")
+                
+                # 保存结果
+                self.results.append({
+                    'function': export,
+                    'definition': func_def,
+                    'issues': issues,
+                    'is_compliant': len(issues) == 0
+                })
+        
+        total_functions = len(self.results)
+        compliant_functions = len([r for r in self.results if r['is_compliant']])
+        
+        return {
+            'total_functions': total_functions,
+            'compliant_functions': compliant_functions,
+            'non_compliant_functions': total_functions - compliant_functions,
+            'violation_stats': self.violation_stats,
+            'results': self.results
+        }
+    
+    def save_report(self, report: Dict, output_file: str):
+        """保存报告到文件"""
+        # 保存JSON报告
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
+        
+        # 生成Markdown报告
+        md_file = output_file.replace('.json', '.md')
+        with open(md_file, 'w', encoding='utf-8') as f:
+            f.write("# MSH函数规范检查报告\n\n")
+            f.write("## 统计信息\n\n")
+            f.write(f"- 总函数数: {report['total_functions']}\n")
+            f.write(f"- 符合规范的函数: {report['compliant_functions']}\n")
+            f.write(f"- 不符合规范的函数: {report['non_compliant_functions']}\n\n")
+            
+            f.write("## 违规统计\n\n")
+            for violation_type, count in report['violation_stats'].items():
+                if count > 0:
+                    f.write(f"- {violation_type}: {count}\n")
+            f.write("\n")
+            
+            f.write("## 检查结果\n\n")
+            
+            for result in report['results']:
+                status_icon = "✅" if result['is_compliant'] else "❌"
+                relative_path = self.get_relative_path(result['function']['file'])
+                
+                if result['definition']:
+                    modifiers = ["static"] if result['definition'].get('is_static', False) else []
+                    modifier_str = " ".join(modifiers) + " " if modifiers else ""
+                    signature = f"{modifier_str}{result['definition']['return_type']} {result['function']['function_name']}({result['definition']['parameters']})"
+                else:
+                    signature = f"找不到定义: {result['function']['function_name']}()"
+                
+                f.write(f"{status_icon} {signature}\n")
+                f.write(f"  声明: {relative_path}:{result['function']['line_number']}\n")
+                
+                if result['definition']:
+                    f.write(f"  定义: {relative_path}:{result['definition']['line_number']}\n")
+                else:
+                    f.write(f"  定义: 未找到\n")
+                
+                if not result['is_compliant'] and result['issues']:
+                    f.write("  问题:\n")
+                    for issue in result['issues']:
+                        f.write(f"    - {issue}\n")
+                
+                f.write("\n")
+
+if __name__ == "__main__":
+    checker = MSHFunctionChecker("/home/dongly/rt-thread")
+    report = checker.check_all_functions()
+    checker.save_report(report, "msh_function_check_report.json")
+    
+    print(f"\n检查完成!")
+    print(f"总函数数: {report['total_functions']}")
+    print(f"静态函数数量: {report['violation_stats'].get('静态函数数量', 0)}")
+    print(f"符合规范的函数: {report['compliant_functions']}")
+    print(f"不符合规范的函数: {report['non_compliant_functions']}")
+    
+    print(f"\n违规明细统计:")
+    for violation_type, count in report['violation_stats'].items():
+        if violation_type != "静态函数数量":
+            print(f"- {violation_type}: {count}")
+    
+    print(f"\n报告已保存到: msh_function_check_report.json 和 msh_function_check_report.md"), line):
+                    issues.append("函数声明返回int但return语句无返回值")
+                    break
+        
+        return issues
+
+    def check_rt_unused_usage(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查RT_UNUSED使用情况"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+    
+    def check_rt_unused_usage(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查RT_UNUSED使用情况"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return []
+        
+        # 检查参数使用情况
+        argc_used = any(re.search(r'\bargc\b', line) and not re.search(r'//.*\bargc\b', line) 
+                      for i in range(func_body_start, func_body_end + 1) for line in [lines[i]])
+        argv_used = any(re.search(r'\bargv\b', line) and not re.search(r'//.*\bargv\b', line) 
+                      for i in range(func_body_start, func_body_end + 1) for line in [lines[i]])
+        
+        # 检查RT_UNUSED标记
+        func_line = lines[start_line]
+        params_section = re.search(r'\(([^)]*)\)', func_line)
+        has_rt_unused_argc = params_section and 'RT_UNUSED' in params_section.group(1) and 'argc' in params_section.group(1)
+        has_rt_unused_argv = params_section and 'RT_UNUSED' in params_section.group(1) and 'argv' in params_section.group(1)
+        
+        func_body_content = '\n'.join(lines[func_body_start+1:func_body_end])
+        if 'RT_UNUSED(argc)' in func_body_content:
+            has_rt_unused_argc = True
+        if 'RT_UNUSED(argv)' in func_body_content:
+            has_rt_unused_argv = True
+        
+        if not argc_used and not has_rt_unused_argc:
+            issues.append("参数argc未使用且未标记RT_UNUSED")
+        if not argv_used and not has_rt_unused_argv:
+            issues.append("参数argv未使用且未标记RT_UNUSED")
+        
+        return issues
+    
+    def check_return_statement(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查返回语句"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return ["无法找到函数体"]
+        
+        # 检查返回语句
+        has_return = any(re.search(r'\breturn\b', lines[i]) for i in range(func_body_start, func_body_end + 1))
+        
+        if not has_return:
+            issues.append("函数缺少返回语句")
+        
+        return issues
+    
+    def check_header_declaration(self, file_path: Path, func_name: str, func_def: Dict) -> Tuple[List[str], Optional[Dict]]:
+        """检查非静态函数是否在头文件中有声明"""
+        issues = []
+        header_info = None
+        
+        if func_def and not func_def.get('is_static', False):
+            header_file = self.find_header_file(file_path)
+            if not header_file:
+                issues.append("非静态函数在头文件中无声明")
+                return issues, header_info
+            
+            try:
+                with open(header_file, 'r', encoding='utf-8', errors='ignore') as f:
+                    header_content = f.read()
+            except Exception:
+                issues.append(f"无法读取头文件: {header_file}")
+                return issues, header_info
+            
+            header_content_no_comments = re.sub(r'//.*$', '', header_content, flags=re.MULTILINE)
+            header_content_no_comments = re.sub(r'/\*.*?\*/', '', header_content_no_comments, flags=re.DOTALL)
+            
+            return_type = func_def.get('return_type', '')
+            declaration_pattern = rf'(?:^|\n)\s*{re.escape(return_type)}\s+{re.escape(func_name)}\s*\([^)]*\)\s*;'
+            
+            match = re.search(declaration_pattern, header_content_no_comments, re.MULTILINE)
+            if match:
+                func_pattern_in_original = r'\b' + re.escape(func_name) + r'\s*\('
+                func_match_in_original = re.search(func_pattern_in_original, header_content)
+                line_num = header_content[:func_match_in_original.start()].count('\n') + 1 if func_match_in_original else header_content[:match.start()].count('\n') + 1
+                
+                header_info = {
+                    'header_file': str(header_file),
+                    'line_number': line_num
+                }
+                issues.append("非静态函数在头文件中有声明")
+            else:
+                issues.append("非静态函数在头文件中无声明")
+        
+        return issues, header_info
+    
+    def find_header_file(self, source_file) -> Optional[Path]:
+        """查找源文件对应的头文件"""
+        if isinstance(source_file, str):
+            source_file = Path(source_file)
+        
+        if source_file.suffix == '.c':
+            header_file = source_file.with_suffix('.h')
+            if header_file.exists():
+                return header_file
+        
+        source_dir = source_file.parent
+        source_name = source_file.stem
+        potential_header = source_dir / f"{source_name}.h"
+        if potential_header.exists():
+            return potential_header
+        
+        return None
+    
+    def merge_signature_issues(self, issues: List[str]) -> List[str]:
+        """合并签名相关的问题"""
+        merged = []
+        signature_issues = []
+        
+        for issue in issues:
+            if '返回类型应该是' in issue or '参数应该是' in issue:
+                signature_issues.append(issue)
+            else:
+                merged.append(issue)
+        
+        if signature_issues:
+            merged.append("函数签名不符合规范：返回类型应为'int'，参数应为'int argc, char **argv'")
+        
+        return merged
+    
+    def get_relative_path(self, file_path: str) -> str:
+        """获取相对路径"""
+        if file_path.startswith('/home/dongly/rt-thread/'):
+            return file_path[len('/home/dongly/rt-thread/'):]
+        return file_path
+    
+    def check_all_functions(self) -> Dict:
+        """检查所有MSH函数"""
+        print("正在扫描所有C文件...")
+        c_files = self.find_c_files()
+        print(f"找到 {len(c_files)} 个C文件")
+        
+        for file_path in c_files:
+            file_path_str = str(file_path)
+            relative_path = self.get_relative_path(file_path_str)
+            print(f"检查文件: {relative_path}")
+            
+            msh_exports = self.extract_msh_exports(file_path)
+            
+            for export in msh_exports:
+                func_def = self.find_function_definition(file_path, export['function_name'])
+                
+                if not func_def:
+                    issues = [f"找不到函数定义: {export['function_name']}"]
+                    self.violation_stats['找不到函数定义'] += 1
+                else:
+                    # 检查各项规范
+                    signature_issues = self.check_function_signature(func_def)
+                    return_type_issues = self.check_return_type(func_def)
+                    return_consistency_issues = self.check_return_statement_consistency(file_path, func_def)
+                    rt_unused_issues = self.check_rt_unused_usage(file_path, func_def)
+                    return_issues = self.check_return_statement(file_path, func_def)
+                    header_issues, header_info = self.check_header_declaration(file_path, export['function_name'], func_def)
+                    
+                    all_issues = signature_issues + return_type_issues + return_consistency_issues + rt_unused_issues + return_issues + header_issues
+                    issues = self.merge_signature_issues(all_issues)
+                    
+                    # 统计违规类型
+                    for issue in issues:
+                        if '函数签名不符合规范' in issue:
+                            self.violation_stats['函数签名错误'] += 1
+                        elif '参数argc未使用且未标记RT_UNUSED' in issue:
+                            self.violation_stats['参数argc未使用且未标记RT_UNUSED'] += 1
+                        elif '参数argv未使用且未标记RT_UNUSED' in issue:
+                            self.violation_stats['参数argv未使用且未标记RT_UNUSED'] += 1
+                        elif '函数缺少返回语句' in issue:
+                            self.violation_stats['函数缺少返回语句'] += 1
+                        elif '返回类型应该是'int'' in issue:
+                            self.violation_stats['返回类型不是int'] += 1
+                        elif '函数声明返回int但return语句无返回值' in issue:
+                            self.violation_stats['函数声明返回int但return语句无返回值'] += 1
+                        elif '找不到函数定义' in issue:
+                            self.violation_stats['找不到函数定义'] += 1
+                        elif '非静态函数在头文件中无声明' in issue:
+                            self.violation_stats['非静态函数在头文件中无声明'] += 1
+                        elif '非静态函数在头文件中有声明' in issue:
+                            self.violation_stats['非静态函数在头文件中有声明'] += 1
+                    
+                    # 统计静态函数
+                    if func_def.get('is_static', False):
+                        self.violation_stats['静态函数数量'] += 1
+                
+                # 实时显示违规内容
+                if issues:
+                    relative_path = self.get_relative_path(export['file'])
+                    
+                    if func_def:
+                        modifiers = ["static"] if func_def.get('is_static', False) else []
+                        modifier_str = " ".join(modifiers) + " " if modifiers else ""
+                        signature = f"{modifier_str}{func_def['return_type']} {export['function_name']}({func_def['parameters']})"
+                        def_line = func_def['line_number']
+                    else:
+                        signature = f"找不到定义: {export['function_name']}()"
+                        def_line = "未知"
+                    
+                    export_line = export['line_number']
+                    
+                    print(f"\n❌ 违规函数: {signature}")
+                    print(f"   声明位置: {relative_path}:{export_line}")
+                    print(f"   定义位置: {relative_path}:{def_line}")
+                    print("   违规内容:")
+                    for issue in issues:
+                        print(f"     - {issue}")
+                
+                # 保存结果
+                self.results.append({
+                    'function': export,
+                    'definition': func_def,
+                    'issues': issues,
+                    'is_compliant': len(issues) == 0
+                })
+        
+        total_functions = len(self.results)
+        compliant_functions = len([r for r in self.results if r['is_compliant']])
+        
+        return {
+            'total_functions': total_functions,
+            'compliant_functions': compliant_functions,
+            'non_compliant_functions': total_functions - compliant_functions,
+            'violation_stats': self.violation_stats,
+            'results': self.results
+        }
+    
+    def save_report(self, report: Dict, output_file: str):
+        """保存报告到文件"""
+        # 保存JSON报告
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
+        
+        # 生成Markdown报告
+        md_file = output_file.replace('.json', '.md')
+        with open(md_file, 'w', encoding='utf-8') as f:
+            f.write("# MSH函数规范检查报告\n\n")
+            f.write("## 统计信息\n\n")
+            f.write(f"- 总函数数: {report['total_functions']}\n")
+            f.write(f"- 符合规范的函数: {report['compliant_functions']}\n")
+            f.write(f"- 不符合规范的函数: {report['non_compliant_functions']}\n\n")
+            
+            f.write("## 违规统计\n\n")
+            for violation_type, count in report['violation_stats'].items():
+                if count > 0:
+                    f.write(f"- {violation_type}: {count}\n")
+            f.write("\n")
+            
+            f.write("## 检查结果\n\n")
+            
+            for result in report['results']:
+                status_icon = "✅" if result['is_compliant'] else "❌"
+                relative_path = self.get_relative_path(result['function']['file'])
+                
+                if result['definition']:
+                    modifiers = ["static"] if result['definition'].get('is_static', False) else []
+                    modifier_str = " ".join(modifiers) + " " if modifiers else ""
+                    signature = f"{modifier_str}{result['definition']['return_type']} {result['function']['function_name']}({result['definition']['parameters']})"
+                else:
+                    signature = f"找不到定义: {result['function']['function_name']}()"
+                
+                f.write(f"{status_icon} {signature}\n")
+                f.write(f"  声明: {relative_path}:{result['function']['line_number']}\n")
+                
+                if result['definition']:
+                    f.write(f"  定义: {relative_path}:{result['definition']['line_number']}\n")
+                else:
+                    f.write(f"  定义: 未找到\n")
+                
+                if not result['is_compliant'] and result['issues']:
+                    f.write("  问题:\n")
+                    for issue in result['issues']:
+                        f.write(f"    - {issue}\n")
+                
+                f.write("\n")
+
+if __name__ == "__main__":
+    checker = MSHFunctionChecker("/home/dongly/rt-thread")
+    report = checker.check_all_functions()
+    checker.save_report(report, "msh_function_check_report.json")
+    
+    print(f"\n检查完成!")
+    print(f"总函数数: {report['total_functions']}")
+    print(f"静态函数数量: {report['violation_stats'].get('静态函数数量', 0)}")
+    print(f"符合规范的函数: {report['compliant_functions']}")
+    print(f"不符合规范的函数: {report['non_compliant_functions']}")
+    
+    print(f"\n违规明细统计:")
+    for violation_type, count in report['violation_stats'].items():
+        if violation_type != "静态函数数量":
+            print(f"- {violation_type}: {count}")
+    
+    print(f"\n报告已保存到: msh_function_check_report.json 和 msh_function_check_report.md"), line):
+                    issues.append("函数声明返回int但return语句无返回值")
+                    break
+        
+        return issues
+    
+    def check_rt_unused_usage(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查RT_UNUSED使用情况"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return []
+        
+        # 检查参数使用情况
+        argc_used = any(re.search(r'\bargc\b', line) and not re.search(r'//.*\bargc\b', line) 
+                      for i in range(func_body_start, func_body_end + 1) for line in [lines[i]])
+        argv_used = any(re.search(r'\bargv\b', line) and not re.search(r'//.*\bargv\b', line) 
+                      for i in range(func_body_start, func_body_end + 1) for line in [lines[i]])
+        
+        # 检查RT_UNUSED标记
+        func_line = lines[start_line]
+        params_section = re.search(r'\(([^)]*)\)', func_line)
+        has_rt_unused_argc = params_section and 'RT_UNUSED' in params_section.group(1) and 'argc' in params_section.group(1)
+        has_rt_unused_argv = params_section and 'RT_UNUSED' in params_section.group(1) and 'argv' in params_section.group(1)
+        
+        func_body_content = '\n'.join(lines[func_body_start+1:func_body_end])
+        if 'RT_UNUSED(argc)' in func_body_content:
+            has_rt_unused_argc = True
+        if 'RT_UNUSED(argv)' in func_body_content:
+            has_rt_unused_argv = True
+        
+        if not argc_used and not has_rt_unused_argc:
+            issues.append("参数argc未使用且未标记RT_UNUSED")
+        if not argv_used and not has_rt_unused_argv:
+            issues.append("参数argv未使用且未标记RT_UNUSED")
+        
+        return issues
+    
+    def check_return_statement(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查返回语句"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return ["无法找到函数体"]
+        
+        # 检查返回语句
+        has_return = any(re.search(r'\breturn\b', lines[i]) for i in range(func_body_start, func_body_end + 1))
+        
+        if not has_return:
+            issues.append("函数缺少返回语句")
+        
+        return issues
+    
+    def check_header_declaration(self, file_path: Path, func_name: str, func_def: Dict) -> Tuple[List[str], Optional[Dict]]:
+        """检查非静态函数是否在头文件中有声明"""
+        issues = []
+        header_info = None
+        
+        if func_def and not func_def.get('is_static', False):
+            header_file = self.find_header_file(file_path)
+            if not header_file:
+                issues.append("非静态函数在头文件中无声明")
+                return issues, header_info
+            
+            try:
+                with open(header_file, 'r', encoding='utf-8', errors='ignore') as f:
+                    header_content = f.read()
+            except Exception:
+                issues.append(f"无法读取头文件: {header_file}")
+                return issues, header_info
+            
+            header_content_no_comments = re.sub(r'//.*$', '', header_content, flags=re.MULTILINE)
+            header_content_no_comments = re.sub(r'/\*.*?\*/', '', header_content_no_comments, flags=re.DOTALL)
+            
+            return_type = func_def.get('return_type', '')
+            declaration_pattern = rf'(?:^|\n)\s*{re.escape(return_type)}\s+{re.escape(func_name)}\s*\([^)]*\)\s*;'
+            
+            match = re.search(declaration_pattern, header_content_no_comments, re.MULTILINE)
+            if match:
+                func_pattern_in_original = r'\b' + re.escape(func_name) + r'\s*\('
+                func_match_in_original = re.search(func_pattern_in_original, header_content)
+                line_num = header_content[:func_match_in_original.start()].count('\n') + 1 if func_match_in_original else header_content[:match.start()].count('\n') + 1
+                
+                header_info = {
+                    'header_file': str(header_file),
+                    'line_number': line_num
+                }
+                issues.append("非静态函数在头文件中有声明")
+            else:
+                issues.append("非静态函数在头文件中无声明")
+        
+        return issues, header_info
+    
+    def find_header_file(self, source_file) -> Optional[Path]:
+        """查找源文件对应的头文件"""
+        if isinstance(source_file, str):
+            source_file = Path(source_file)
+        
+        if source_file.suffix == '.c':
+            header_file = source_file.with_suffix('.h')
+            if header_file.exists():
+                return header_file
+        
+        source_dir = source_file.parent
+        source_name = source_file.stem
+        potential_header = source_dir / f"{source_name}.h"
+        if potential_header.exists():
+            return potential_header
+        
+        return None
+    
+    def merge_signature_issues(self, issues: List[str]) -> List[str]:
+        """合并签名相关的问题"""
+        merged = []
+        signature_issues = []
+        
+        for issue in issues:
+            if '返回类型应该是' in issue or '参数应该是' in issue:
+                signature_issues.append(issue)
+            else:
+                merged.append(issue)
+        
+        if signature_issues:
+            merged.append("函数签名不符合规范：返回类型应为'int'，参数应为'int argc, char **argv'")
+        
+        return merged
+    
+    def get_relative_path(self, file_path: str) -> str:
+        """获取相对路径"""
+        if file_path.startswith('/home/dongly/rt-thread/'):
+            return file_path[len('/home/dongly/rt-thread/'):]
+        return file_path
+    
+    def check_all_functions(self) -> Dict:
+        """检查所有MSH函数"""
+        print("正在扫描所有C文件...")
+        c_files = self.find_c_files()
+        print(f"找到 {len(c_files)} 个C文件")
+        
+        for file_path in c_files:
+            file_path_str = str(file_path)
+            relative_path = self.get_relative_path(file_path_str)
+            print(f"检查文件: {relative_path}")
+            
+            msh_exports = self.extract_msh_exports(file_path)
+            
+            for export in msh_exports:
+                func_def = self.find_function_definition(file_path, export['function_name'])
+                
+                if not func_def:
+                    issues = [f"找不到函数定义: {export['function_name']}"]
+                    self.violation_stats['找不到函数定义'] += 1
+                else:
+                    # 检查各项规范
+                    signature_issues = self.check_function_signature(func_def)
+                    return_type_issues = self.check_return_type(func_def)
+                    return_consistency_issues = self.check_return_statement_consistency(file_path, func_def)
+                    rt_unused_issues = self.check_rt_unused_usage(file_path, func_def)
+                    return_issues = self.check_return_statement(file_path, func_def)
+                    header_issues, header_info = self.check_header_declaration(file_path, export['function_name'], func_def)
+                    
+                    all_issues = signature_issues + return_type_issues + return_consistency_issues + rt_unused_issues + return_issues + header_issues
+                    issues = self.merge_signature_issues(all_issues)
+                    
+                    # 统计违规类型
+                    for issue in issues:
+                        if '函数签名不符合规范' in issue:
+                            self.violation_stats['函数签名错误'] += 1
+                        elif '参数argc未使用且未标记RT_UNUSED' in issue:
+                            self.violation_stats['参数argc未使用且未标记RT_UNUSED'] += 1
+                        elif '参数argv未使用且未标记RT_UNUSED' in issue:
+                            self.violation_stats['参数argv未使用且未标记RT_UNUSED'] += 1
+                        elif '函数缺少返回语句' in issue:
+                            self.violation_stats['函数缺少返回语句'] += 1
+                        elif '返回类型应该是'int'' in issue:
+                            self.violation_stats['返回类型不是int'] += 1
+                        elif '函数声明返回int但return语句无返回值' in issue:
+                            self.violation_stats['函数声明返回int但return语句无返回值'] += 1
+                        elif '找不到函数定义' in issue:
+                            self.violation_stats['找不到函数定义'] += 1
+                        elif '非静态函数在头文件中无声明' in issue:
+                            self.violation_stats['非静态函数在头文件中无声明'] += 1
+                        elif '非静态函数在头文件中有声明' in issue:
+                            self.violation_stats['非静态函数在头文件中有声明'] += 1
+                    
+                    # 统计静态函数
+                    if func_def.get('is_static', False):
+                        self.violation_stats['静态函数数量'] += 1
+                
+                # 实时显示违规内容
+                if issues:
+                    relative_path = self.get_relative_path(export['file'])
+                    
+                    if func_def:
+                        modifiers = ["static"] if func_def.get('is_static', False) else []
+                        modifier_str = " ".join(modifiers) + " " if modifiers else ""
+                        signature = f"{modifier_str}{func_def['return_type']} {export['function_name']}({func_def['parameters']})"
+                        def_line = func_def['line_number']
+                    else:
+                        signature = f"找不到定义: {export['function_name']}()"
+                        def_line = "未知"
+                    
+                    export_line = export['line_number']
+                    
+                    print(f"\n❌ 违规函数: {signature}")
+                    print(f"   声明位置: {relative_path}:{export_line}")
+                    print(f"   定义位置: {relative_path}:{def_line}")
+                    print("   违规内容:")
+                    for issue in issues:
+                        print(f"     - {issue}")
+                
+                # 保存结果
+                self.results.append({
+                    'function': export,
+                    'definition': func_def,
+                    'issues': issues,
+                    'is_compliant': len(issues) == 0
+                })
+        
+        total_functions = len(self.results)
+        compliant_functions = len([r for r in self.results if r['is_compliant']])
+        
+        return {
+            'total_functions': total_functions,
+            'compliant_functions': compliant_functions,
+            'non_compliant_functions': total_functions - compliant_functions,
+            'violation_stats': self.violation_stats,
+            'results': self.results
+        }
+    
+    def save_report(self, report: Dict, output_file: str):
+        """保存报告到文件"""
+        # 保存JSON报告
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
+        
+        # 生成Markdown报告
+        md_file = output_file.replace('.json', '.md')
+        with open(md_file, 'w', encoding='utf-8') as f:
+            f.write("# MSH函数规范检查报告\n\n")
+            f.write("## 统计信息\n\n")
+            f.write(f"- 总函数数: {report['total_functions']}\n")
+            f.write(f"- 符合规范的函数: {report['compliant_functions']}\n")
+            f.write(f"- 不符合规范的函数: {report['non_compliant_functions']}\n\n")
+            
+            f.write("## 违规统计\n\n")
+            for violation_type, count in report['violation_stats'].items():
+                if count > 0:
+                    f.write(f"- {violation_type}: {count}\n")
+            f.write("\n")
+            
+            f.write("## 检查结果\n\n")
+            
+            for result in report['results']:
+                status_icon = "✅" if result['is_compliant'] else "❌"
+                relative_path = self.get_relative_path(result['function']['file'])
+                
+                if result['definition']:
+                    modifiers = ["static"] if result['definition'].get('is_static', False) else []
+                    modifier_str = " ".join(modifiers) + " " if modifiers else ""
+                    signature = f"{modifier_str}{result['definition']['return_type']} {result['function']['function_name']}({result['definition']['parameters']})"
+                else:
+                    signature = f"找不到定义: {result['function']['function_name']}()"
+                
+                f.write(f"{status_icon} {signature}\n")
+                f.write(f"  声明: {relative_path}:{result['function']['line_number']}\n")
+                
+                if result['definition']:
+                    f.write(f"  定义: {relative_path}:{result['definition']['line_number']}\n")
+                else:
+                    f.write(f"  定义: 未找到\n")
+                
+                if not result['is_compliant'] and result['issues']:
+                    f.write("  问题:\n")
+                    for issue in result['issues']:
+                        f.write(f"    - {issue}\n")
+                
+                f.write("\n")
+
+if __name__ == "__main__":
+    checker = MSHFunctionChecker("/home/dongly/rt-thread")
+    report = checker.check_all_functions()
+    checker.save_report(report, "msh_function_check_report.json")
+    
+    print(f"\n检查完成!")
+    print(f"总函数数: {report['total_functions']}")
+    print(f"静态函数数量: {report['violation_stats'].get('静态函数数量', 0)}")
+    print(f"符合规范的函数: {report['compliant_functions']}")
+    print(f"不符合规范的函数: {report['non_compliant_functions']}")
+    
+    print(f"\n违规明细统计:")
+    for violation_type, count in report['violation_stats'].items():
+        if violation_type != "静态函数数量":
+            print(f"- {violation_type}: {count}")
+    
+    print(f"\n报告已保存到: msh_function_check_report.json 和 msh_function_check_report.md"), line):
+    
+    def check_rt_unused_usage(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查RT_UNUSED使用情况"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return []
+        
+        # 检查参数使用情况
+        argc_used = any(re.search(r'\bargc\b', line) and not re.search(r'//.*\bargc\b', line) 
+                      for i in range(func_body_start, func_body_end + 1) for line in [lines[i]])
+        argv_used = any(re.search(r'\bargv\b', line) and not re.search(r'//.*\bargv\b', line) 
+                      for i in range(func_body_start, func_body_end + 1) for line in [lines[i]])
+        
+        # 检查RT_UNUSED标记
+        func_line = lines[start_line]
+        params_section = re.search(r'\(([^)]*)\)', func_line)
+        has_rt_unused_argc = params_section and 'RT_UNUSED' in params_section.group(1) and 'argc' in params_section.group(1)
+        has_rt_unused_argv = params_section and 'RT_UNUSED' in params_section.group(1) and 'argv' in params_section.group(1)
+        
+        func_body_content = '\n'.join(lines[func_body_start+1:func_body_end])
+        if 'RT_UNUSED(argc)' in func_body_content:
+            has_rt_unused_argc = True
+        if 'RT_UNUSED(argv)' in func_body_content:
+            has_rt_unused_argv = True
+        
+        if not argc_used and not has_rt_unused_argc:
+            issues.append("参数argc未使用且未标记RT_UNUSED")
+        if not argv_used and not has_rt_unused_argv:
+            issues.append("参数argv未使用且未标记RT_UNUSED")
+        
+        return issues
+    
+    def check_return_statement(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查返回语句"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return ["无法找到函数体"]
+        
+        # 检查返回语句
+        has_return = any(re.search(r'\breturn\b', lines[i]) for i in range(func_body_start, func_body_end + 1))
+        
+        if not has_return:
+            issues.append("函数缺少返回语句")
+        
+        return issues
+    
+    def check_header_declaration(self, file_path: Path, func_name: str, func_def: Dict) -> Tuple[List[str], Optional[Dict]]:
+        """检查非静态函数是否在头文件中有声明"""
+        issues = []
+        header_info = None
+        
+        if func_def and not func_def.get('is_static', False):
+            header_file = self.find_header_file(file_path)
+            if not header_file:
+                issues.append("非静态函数在头文件中无声明")
+                return issues, header_info
+            
+            try:
+                with open(header_file, 'r', encoding='utf-8', errors='ignore') as f:
+                    header_content = f.read()
+            except Exception:
+                issues.append(f"无法读取头文件: {header_file}")
+                return issues, header_info
+            
+            header_content_no_comments = re.sub(r'//.*$', '', header_content, flags=re.MULTILINE)
+            header_content_no_comments = re.sub(r'/\*.*?\*/', '', header_content_no_comments, flags=re.DOTALL)
+            
+            return_type = func_def.get('return_type', '')
+            declaration_pattern = rf'(?:^|\n)\s*{re.escape(return_type)}\s+{re.escape(func_name)}\s*\([^)]*\)\s*;'
+            
+            match = re.search(declaration_pattern, header_content_no_comments, re.MULTILINE)
+            if match:
+                func_pattern_in_original = r'\b' + re.escape(func_name) + r'\s*\('
+                func_match_in_original = re.search(func_pattern_in_original, header_content)
+                line_num = header_content[:func_match_in_original.start()].count('\n') + 1 if func_match_in_original else header_content[:match.start()].count('\n') + 1
+                
+                header_info = {
+                    'header_file': str(header_file),
+                    'line_number': line_num
+                }
+                issues.append("非静态函数在头文件中有声明")
+            else:
+                issues.append("非静态函数在头文件中无声明")
+        
+        return issues, header_info
+    
+    def find_header_file(self, source_file) -> Optional[Path]:
+        """查找源文件对应的头文件"""
+        if isinstance(source_file, str):
+            source_file = Path(source_file)
+        
+        if source_file.suffix == '.c':
+            header_file = source_file.with_suffix('.h')
+            if header_file.exists():
+                return header_file
+        
+        source_dir = source_file.parent
+        source_name = source_file.stem
+        potential_header = source_dir / f"{source_name}.h"
+        if potential_header.exists():
+            return potential_header
+        
+        return None
+    
+    def merge_signature_issues(self, issues: List[str]) -> List[str]:
+        """合并签名相关的问题"""
+        merged = []
+        signature_issues = []
+        
+        for issue in issues:
+            if '返回类型应该是' in issue or '参数应该是' in issue:
+                signature_issues.append(issue)
+            else:
+                merged.append(issue)
+        
+        if signature_issues:
+            merged.append("函数签名不符合规范：返回类型应为'int'，参数应为'int argc, char **argv'")
+        
+        return merged
+    
+    def get_relative_path(self, file_path: str) -> str:
+        """获取相对路径"""
+        if file_path.startswith('/home/dongly/rt-thread/'):
+            return file_path[len('/home/dongly/rt-thread/'):]
+        return file_path
+    
+    def check_all_functions(self) -> Dict:
+        """检查所有MSH函数"""
+        print("正在扫描所有C文件...")
+        c_files = self.find_c_files()
+        print(f"找到 {len(c_files)} 个C文件")
+        
+        for file_path in c_files:
+            file_path_str = str(file_path)
+            relative_path = self.get_relative_path(file_path_str)
+            print(f"检查文件: {relative_path}")
+            
+            msh_exports = self.extract_msh_exports(file_path)
+            
+            for export in msh_exports:
+                func_def = self.find_function_definition(file_path, export['function_name'])
+                
+                if not func_def:
+                    issues = [f"找不到函数定义: {export['function_name']}"]
+                    self.violation_stats['找不到函数定义'] += 1
+                else:
+                    # 检查各项规范
+                    signature_issues = self.check_function_signature(func_def)
+                    return_type_issues = self.check_return_type(func_def)
+                    return_consistency_issues = self.check_return_statement_consistency(file_path, func_def)
+                    rt_unused_issues = self.check_rt_unused_usage(file_path, func_def)
+                    return_issues = self.check_return_statement(file_path, func_def)
+                    header_issues, header_info = self.check_header_declaration(file_path, export['function_name'], func_def)
+                    
+                    all_issues = signature_issues + return_type_issues + return_consistency_issues + rt_unused_issues + return_issues + header_issues
+                    issues = self.merge_signature_issues(all_issues)
+                    
+                    # 统计违规类型
+                    for issue in issues:
+                        if '函数签名不符合规范' in issue:
+                            self.violation_stats['函数签名错误'] += 1
+                        elif '参数argc未使用且未标记RT_UNUSED' in issue:
+                            self.violation_stats['参数argc未使用且未标记RT_UNUSED'] += 1
+                        elif '参数argv未使用且未标记RT_UNUSED' in issue:
+                            self.violation_stats['参数argv未使用且未标记RT_UNUSED'] += 1
+                        elif '函数缺少返回语句' in issue:
+                            self.violation_stats['函数缺少返回语句'] += 1
+                        elif '返回类型应该是'int'' in issue:
+                            self.violation_stats['返回类型不是int'] += 1
+                        elif '函数声明返回int但return语句无返回值' in issue:
+                            self.violation_stats['函数声明返回int但return语句无返回值'] += 1
+                        elif '找不到函数定义' in issue:
+                            self.violation_stats['找不到函数定义'] += 1
+                        elif '非静态函数在头文件中无声明' in issue:
+                            self.violation_stats['非静态函数在头文件中无声明'] += 1
+                        elif '非静态函数在头文件中有声明' in issue:
+                            self.violation_stats['非静态函数在头文件中有声明'] += 1
+                    
+                    # 统计静态函数
+                    if func_def.get('is_static', False):
+                        self.violation_stats['静态函数数量'] += 1
+                
+                # 实时显示违规内容
+                if issues:
+                    relative_path = self.get_relative_path(export['file'])
+                    
+                    if func_def:
+                        modifiers = ["static"] if func_def.get('is_static', False) else []
+                        modifier_str = " ".join(modifiers) + " " if modifiers else ""
+                        signature = f"{modifier_str}{func_def['return_type']} {export['function_name']}({func_def['parameters']})"
+                        def_line = func_def['line_number']
+                    else:
+                        signature = f"找不到定义: {export['function_name']}()"
+                        def_line = "未知"
+                    
+                    export_line = export['line_number']
+                    
+                    print(f"\n❌ 违规函数: {signature}")
+                    print(f"   声明位置: {relative_path}:{export_line}")
+                    print(f"   定义位置: {relative_path}:{def_line}")
+                    print("   违规内容:")
+                    for issue in issues:
+                        print(f"     - {issue}")
+                
+                # 保存结果
+                self.results.append({
+                    'function': export,
+                    'definition': func_def,
+                    'issues': issues,
+                    'is_compliant': len(issues) == 0
+                })
+        
+        total_functions = len(self.results)
+        compliant_functions = len([r for r in self.results if r['is_compliant']])
+        
+        return {
+            'total_functions': total_functions,
+            'compliant_functions': compliant_functions,
+            'non_compliant_functions': total_functions - compliant_functions,
+            'violation_stats': self.violation_stats,
+            'results': self.results
+        }
+    
+    def save_report(self, report: Dict, output_file: str):
+        """保存报告到文件"""
+        # 保存JSON报告
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
+        
+        # 生成Markdown报告
+        md_file = output_file.replace('.json', '.md')
+        with open(md_file, 'w', encoding='utf-8') as f:
+            f.write("# MSH函数规范检查报告\n\n")
+            f.write("## 统计信息\n\n")
+            f.write(f"- 总函数数: {report['total_functions']}\n")
+            f.write(f"- 符合规范的函数: {report['compliant_functions']}\n")
+            f.write(f"- 不符合规范的函数: {report['non_compliant_functions']}\n\n")
+            
+            f.write("## 违规统计\n\n")
+            for violation_type, count in report['violation_stats'].items():
+                if count > 0:
+                    f.write(f"- {violation_type}: {count}\n")
+            f.write("\n")
+            
+            f.write("## 检查结果\n\n")
+            
+            for result in report['results']:
+                status_icon = "✅" if result['is_compliant'] else "❌"
+                relative_path = self.get_relative_path(result['function']['file'])
+                
+                if result['definition']:
+                    modifiers = ["static"] if result['definition'].get('is_static', False) else []
+                    modifier_str = " ".join(modifiers) + " " if modifiers else ""
+                    signature = f"{modifier_str}{result['definition']['return_type']} {result['function']['function_name']}({result['definition']['parameters']})"
+                else:
+                    signature = f"找不到定义: {result['function']['function_name']}()"
+                
+                f.write(f"{status_icon} {signature}\n")
+                f.write(f"  声明: {relative_path}:{result['function']['line_number']}\n")
+                
+                if result['definition']:
+                    f.write(f"  定义: {relative_path}:{result['definition']['line_number']}\n")
+                else:
+                    f.write(f"  定义: 未找到\n")
+                
+                if not result['is_compliant'] and result['issues']:
+                    f.write("  问题:\n")
+                    for issue in result['issues']:
+                        f.write(f"    - {issue}\n")
+                
+                f.write("\n")
+
+if __name__ == "__main__":
+    checker = MSHFunctionChecker("/home/dongly/rt-thread")
+    report = checker.check_all_functions()
+    checker.save_report(report, "msh_function_check_report.json")
+    
+    print(f"\n检查完成!")
+    print(f"总函数数: {report['total_functions']}")
+    print(f"静态函数数量: {report['violation_stats'].get('静态函数数量', 0)}")
+    print(f"符合规范的函数: {report['compliant_functions']}")
+    print(f"不符合规范的函数: {report['non_compliant_functions']}")
+    
+    print(f"\n违规明细统计:")
+    for violation_type, count in report['violation_stats'].items():
+        if violation_type != "静态函数数量":
+            print(f"- {violation_type}: {count}")
+    
+    print(f"\n报告已保存到: msh_function_check_report.json 和 msh_function_check_report.md"), line):
+                    issues.append("函数声明返回int但return语句无返回值")
+                    break
+        
+        return issues
+    
+    def check_rt_unused_usage(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查RT_UNUSED使用情况"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return []
+        
+        # 检查参数使用情况
+        argc_used = any(re.search(r'\bargc\b', line) and not re.search(r'//.*\bargc\b', line) 
+                      for i in range(func_body_start, func_body_end + 1) for line in [lines[i]])
+        argv_used = any(re.search(r'\bargv\b', line) and not re.search(r'//.*\bargv\b', line) 
+                      for i in range(func_body_start, func_body_end + 1) for line in [lines[i]])
+        
+        # 检查RT_UNUSED标记
+        func_line = lines[start_line]
+        params_section = re.search(r'\(([^)]*)\)', func_line)
+        has_rt_unused_argc = params_section and 'RT_UNUSED' in params_section.group(1) and 'argc' in params_section.group(1)
+        has_rt_unused_argv = params_section and 'RT_UNUSED' in params_section.group(1) and 'argv' in params_section.group(1)
+        
+        func_body_content = '\n'.join(lines[func_body_start+1:func_body_end])
+        if 'RT_UNUSED(argc)' in func_body_content:
+            has_rt_unused_argc = True
+        if 'RT_UNUSED(argv)' in func_body_content:
+            has_rt_unused_argv = True
+        
+        if not argc_used and not has_rt_unused_argc:
+            issues.append("参数argc未使用且未标记RT_UNUSED")
+        if not argv_used and not has_rt_unused_argv:
+            issues.append("参数argv未使用且未标记RT_UNUSED")
+        
+        return issues
+    
+    def check_return_statement(self, file_path: Path, func_def: Dict) -> List[str]:
+        """检查返回语句"""
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+        except Exception:
+            return []
+        
+        issues = []
+        lines = content.split('\n')
+        start_line = func_def['line_number'] - 1
+        
+        # 找到函数体
+        brace_count = 0
+        func_body_start = -1
+        func_body_end = -1
+        
+        for i in range(start_line, len(lines)):
+            if '{' in lines[i]:
+                brace_count += lines[i].count('{')
+                if func_body_start == -1:
+                    func_body_start = i
+            if '}' in lines[i]:
+                brace_count -= lines[i].count('}')
+                if brace_count == 0 and func_body_start != -1:
+                    func_body_end = i
+                    break
+        
+        if func_body_start == -1 or func_body_end == -1:
+            return ["无法找到函数体"]
+        
+        # 检查返回语句
+        has_return = any(re.search(r'\breturn\b', lines[i]) for i in range(func_body_start, func_body_end + 1))
+        
+        if not has_return:
+            issues.append("函数缺少返回语句")
+        
+        return issues
+    
+    def check_header_declaration(self, file_path: Path, func_name: str, func_def: Dict) -> Tuple[List[str], Optional[Dict]]:
+        """检查非静态函数是否在头文件中有声明"""
+        issues = []
+        header_info = None
+        
+        if func_def and not func_def.get('is_static', False):
+            header_file = self.find_header_file(file_path)
+            if not header_file:
+                issues.append("非静态函数在头文件中无声明")
+                return issues, header_info
+            
+            try:
+                with open(header_file, 'r', encoding='utf-8', errors='ignore') as f:
+                    header_content = f.read()
+            except Exception:
+                issues.append(f"无法读取头文件: {header_file}")
+                return issues, header_info
+            
+            header_content_no_comments = re.sub(r'//.*$', '', header_content, flags=re.MULTILINE)
+            header_content_no_comments = re.sub(r'/\*.*?\*/', '', header_content_no_comments, flags=re.DOTALL)
+            
+            return_type = func_def.get('return_type', '')
+            declaration_pattern = rf'(?:^|\n)\s*{re.escape(return_type)}\s+{re.escape(func_name)}\s*\([^)]*\)\s*;'
+            
+            match = re.search(declaration_pattern, header_content_no_comments, re.MULTILINE)
+            if match:
+                func_pattern_in_original = r'\b' + re.escape(func_name) + r'\s*\('
+                func_match_in_original = re.search(func_pattern_in_original, header_content)
+                line_num = header_content[:func_match_in_original.start()].count('\n') + 1 if func_match_in_original else header_content[:match.start()].count('\n') + 1
+                
+                header_info = {
+                    'header_file': str(header_file),
+                    'line_number': line_num
+                }
+                issues.append("非静态函数在头文件中有声明")
+            else:
+                issues.append("非静态函数在头文件中无声明")
+        
+        return issues, header_info
+    
+    def find_header_file(self, source_file) -> Optional[Path]:
+        """查找源文件对应的头文件"""
+        if isinstance(source_file, str):
+            source_file = Path(source_file)
+        
+        if source_file.suffix == '.c':
+            header_file = source_file.with_suffix('.h')
+            if header_file.exists():
+                return header_file
+        
+        source_dir = source_file.parent
+        source_name = source_file.stem
+        potential_header = source_dir / f"{source_name}.h"
+        if potential_header.exists():
+            return potential_header
+        
+        return None
+    
+    def merge_signature_issues(self, issues: List[str]) -> List[str]:
+        """合并签名相关的问题"""
+        merged = []
+        signature_issues = []
+        
+        for issue in issues:
+            if '返回类型应该是' in issue or '参数应该是' in issue:
+                signature_issues.append(issue)
+            else:
+                merged.append(issue)
+        
+        if signature_issues:
+            merged.append("函数签名不符合规范：返回类型应为'int'，参数应为'int argc, char **argv'")
+        
+        return merged
+    
+    def get_relative_path(self, file_path: str) -> str:
+        """获取相对路径"""
+        if file_path.startswith('/home/dongly/rt-thread/'):
+            return file_path[len('/home/dongly/rt-thread/'):]
+        return file_path
+    
+    def check_all_functions(self) -> Dict:
+        """检查所有MSH函数"""
+        print("正在扫描所有C文件...")
+        c_files = self.find_c_files()
+        print(f"找到 {len(c_files)} 个C文件")
+        
+        for file_path in c_files:
+            file_path_str = str(file_path)
+            relative_path = self.get_relative_path(file_path_str)
+            print(f"检查文件: {relative_path}")
+            
+            msh_exports = self.extract_msh_exports(file_path)
+            
+            for export in msh_exports:
+                func_def = self.find_function_definition(file_path, export['function_name'])
+                
+                if not func_def:
+                    issues = [f"找不到函数定义: {export['function_name']}"]
+                    self.violation_stats['找不到函数定义'] += 1
+                else:
+                    # 检查各项规范
+                    signature_issues = self.check_function_signature(func_def)
+                    return_type_issues = self.check_return_type(func_def)
+                    return_consistency_issues = self.check_return_statement_consistency(file_path, func_def)
+                    rt_unused_issues = self.check_rt_unused_usage(file_path, func_def)
+                    return_issues = self.check_return_statement(file_path, func_def)
+                    header_issues, header_info = self.check_header_declaration(file_path, export['function_name'], func_def)
+                    
+                    all_issues = signature_issues + return_type_issues + return_consistency_issues + rt_unused_issues + return_issues + header_issues
+                    issues = self.merge_signature_issues(all_issues)
+                    
+                    # 统计违规类型
+                    for issue in issues:
+                        if '函数签名不符合规范' in issue:
+                            self.violation_stats['函数签名错误'] += 1
+                        elif '参数argc未使用且未标记RT_UNUSED' in issue:
+                            self.violation_stats['参数argc未使用且未标记RT_UNUSED'] += 1
+                        elif '参数argv未使用且未标记RT_UNUSED' in issue:
+                            self.violation_stats['参数argv未使用且未标记RT_UNUSED'] += 1
+                        elif '函数缺少返回语句' in issue:
+                            self.violation_stats['函数缺少返回语句'] += 1
+                        elif '返回类型应该是'int'' in issue:
+                            self.violation_stats['返回类型不是int'] += 1
+                        elif '函数声明返回int但return语句无返回值' in issue:
+                            self.violation_stats['函数声明返回int但return语句无返回值'] += 1
+                        elif '找不到函数定义' in issue:
+                            self.violation_stats['找不到函数定义'] += 1
+                        elif '非静态函数在头文件中无声明' in issue:
+                            self.violation_stats['非静态函数在头文件中无声明'] += 1
+                        elif '非静态函数在头文件中有声明' in issue:
+                            self.violation_stats['非静态函数在头文件中有声明'] += 1
+                    
+                    # 统计静态函数
+                    if func_def.get('is_static', False):
+                        self.violation_stats['静态函数数量'] += 1
+                
+                # 实时显示违规内容
+                if issues:
+                    relative_path = self.get_relative_path(export['file'])
+                    
+                    if func_def:
+                        modifiers = ["static"] if func_def.get('is_static', False) else []
+                        modifier_str = " ".join(modifiers) + " " if modifiers else ""
+                        signature = f"{modifier_str}{func_def['return_type']} {export['function_name']}({func_def['parameters']})"
+                        def_line = func_def['line_number']
+                    else:
+                        signature = f"找不到定义: {export['function_name']}()"
+                        def_line = "未知"
+                    
+                    export_line = export['line_number']
+                    
+                    print(f"\n❌ 违规函数: {signature}")
+                    print(f"   声明位置: {relative_path}:{export_line}")
+                    print(f"   定义位置: {relative_path}:{def_line}")
+                    print("   违规内容:")
+                    for issue in issues:
+                        print(f"     - {issue}")
+                
+                # 保存结果
+                self.results.append({
+                    'function': export,
+                    'definition': func_def,
+                    'issues': issues,
+                    'is_compliant': len(issues) == 0
+                })
+        
+        total_functions = len(self.results)
+        compliant_functions = len([r for r in self.results if r['is_compliant']])
+        
+        return {
+            'total_functions': total_functions,
+            'compliant_functions': compliant_functions,
+            'non_compliant_functions': total_functions - compliant_functions,
+            'violation_stats': self.violation_stats,
+            'results': self.results
+        }
+    
+    def save_report(self, report: Dict, output_file: str):
+        """保存报告到文件"""
+        # 保存JSON报告
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
+        
+        # 生成Markdown报告
+        md_file = output_file.replace('.json', '.md')
+        with open(md_file, 'w', encoding='utf-8') as f:
+            f.write("# MSH函数规范检查报告\n\n")
+            f.write("## 统计信息\n\n")
+            f.write(f"- 总函数数: {report['total_functions']}\n")
+            f.write(f"- 符合规范的函数: {report['compliant_functions']}\n")
+            f.write(f"- 不符合规范的函数: {report['non_compliant_functions']}\n\n")
+            
+            f.write("## 违规统计\n\n")
+            for violation_type, count in report['violation_stats'].items():
+                if count > 0:
+                    f.write(f"- {violation_type}: {count}\n")
+            f.write("\n")
+            
+            f.write("## 检查结果\n\n")
+            
+            for result in report['results']:
+                status_icon = "✅" if result['is_compliant'] else "❌"
+                relative_path = self.get_relative_path(result['function']['file'])
+                
+                if result['definition']:
+                    modifiers = ["static"] if result['definition'].get('is_static', False) else []
+                    modifier_str = " ".join(modifiers) + " " if modifiers else ""
+                    signature = f"{modifier_str}{result['definition']['return_type']} {result['function']['function_name']}({result['definition']['parameters']})"
+                else:
+                    signature = f"找不到定义: {result['function']['function_name']}()"
+                
+                f.write(f"{status_icon} {signature}\n")
+                f.write(f"  声明: {relative_path}:{result['function']['line_number']}\n")
+                
+                if result['definition']:
+                    f.write(f"  定义: {relative_path}:{result['definition']['line_number']}\n")
+                else:
+                    f.write(f"  定义: 未找到\n")
+                
+                if not result['is_compliant'] and result['issues']:
+                    f.write("  问题:\n")
+                    for issue in result['issues']:
+                        f.write(f"    - {issue}\n")
+                
+                f.write("\n")
+
+if __name__ == "__main__":
+    checker = MSHFunctionChecker("/home/dongly/rt-thread")
+    report = checker.check_all_functions()
+    checker.save_report(report, "msh_function_check_report.json")
+    
+    print(f"\n检查完成!")
+    print(f"总函数数: {report['total_functions']}")
+    print(f"静态函数数量: {report['violation_stats'].get('静态函数数量', 0)}")
+    print(f"符合规范的函数: {report['compliant_functions']}")
+    print(f"不符合规范的函数: {report['non_compliant_functions']}")
+    
+    print(f"\n违规明细统计:")
+    for violation_type, count in report['violation_stats'].items():
+        if violation_type != "静态函数数量":
+            print(f"- {violation_type}: {count}")
+    
+    print(f"\n报告已保存到: msh_function_check_report.json 和 msh_function_check_report.md")

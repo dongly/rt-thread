@@ -243,7 +243,7 @@ INIT_DEVICE_EXPORT(fdcan_init);
 #ifdef FINSH_USING_MSH
 #include <finsh.h>
 
-int fdcan_sample(int argc, char **argv)
+static int fdcan_sample(int argc, char **argv)
 {
     rt_err_t result = RT_EOK;
     rt_uint8_t i, rx_buf[8], tx_buf[8];

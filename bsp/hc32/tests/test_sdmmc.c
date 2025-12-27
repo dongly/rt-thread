@@ -146,13 +146,16 @@ static void sdmmc_thread_entry(void *parameter)
     }
 }
 
-static void sdmmc_sample(int argc, char *argv[])
+static int sdmmc_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_thread_t thread = rt_thread_create("sdmmc", sdmmc_thread_entry, RT_NULL, 2048, 15, 10);
     if (thread != RT_NULL)
     {
         rt_thread_startup(thread);
     }
+    return 0;
 }
 MSH_CMD_EXPORT(sdmmc_sample, sdmmc sample);
 

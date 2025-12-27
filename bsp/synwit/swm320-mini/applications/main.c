@@ -35,8 +35,10 @@ void key1_cb(void *args)
 {
     rt_kprintf("key1 irq!\n");
 }
-static int pin_sample(int argc, char *argv[])
+static int pin_sample(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_pin_mode(KEY1_PIN, PIN_IRQ_MODE_FALLING);
     rt_pin_attach_irq(KEY1_PIN, PIN_IRQ_MODE_FALLING, key1_cb, RT_NULL);
     rt_pin_irq_enable(KEY1_PIN, PIN_IRQ_ENABLE);
@@ -54,6 +56,8 @@ MSH_CMD_EXPORT(pin_sample, pin sample);
 
 static int adc_vol_sample(int argc, char *argv[])
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_adc_device_t adc_dev;
     rt_uint32_t value, vol;
     rt_err_t ret = RT_EOK;
@@ -101,6 +105,8 @@ static int hwtimer_sample(int argc, char *argv[])
     hw_dev = rt_device_find(HWTIMER_DEV_NAME);
     if (hw_dev == RT_NULL)
     {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
         rt_kprintf("hwtimer sample run failed! can't find %s device!\n", HWTIMER_DEV_NAME);
         return -RT_ERROR;
     }
@@ -150,6 +156,8 @@ struct rt_device_pwm *pwm_dev; /* PWM设备句柄 */
 
 static int pwm_sample(int argc, char *argv[])
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_uint32_t period, pulse;
 
     period = 500000; /* 周期为0.5ms,单位为纳秒ns */
@@ -179,6 +187,8 @@ static int rtc_sample(int argc, char *argv[])
     ret = set_date(2020, 2, 28);
     if (ret != RT_EOK)
     {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
         rt_kprintf("set RTC date failed\n");
         return ret;
     }
@@ -394,6 +404,8 @@ MSH_CMD_EXPORT(spi_flash_elmfat_sample, spi flash elmfat sample);
 
 static int rt_hw_spi1_tfcard(void)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
    rt_hw_spi_device_attach("spi1", SD_SPI_DEVICE_NAME, GPIOB, PIN6);
    return msd_init(SDCARD_NAME, SD_SPI_DEVICE_NAME);
 }
@@ -502,11 +514,14 @@ static void crypto_sample(void)
     rt_uint32_t result = 0;
     struct hwcrypto_crc_cfg cfg =
         {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
             .last_val = 0x0,
             .poly = 0x04C11DB7,
             .width = 8,
             .xorout = 0x00000000,
             .flags = 0,
+    return 0;
         };
 
     ctx = rt_hwcrypto_crc_create(rt_hwcrypto_dev_default(), HWCRYPTO_CRC_CRC32);
@@ -522,6 +537,8 @@ MSH_CMD_EXPORT(crypto_sample, crypto sample);
 #define NORFLASH_DEV_NAME "nor"
 static int norflash_sample(int argc, char *argv[])
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_err_t ret = RT_EOK;
     rt_device_t hw_dev = RT_NULL;
 

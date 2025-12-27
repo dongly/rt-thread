@@ -117,7 +117,7 @@ int lptim_init(void)
 }
 INIT_DEVICE_EXPORT(lptim_init);
 
-static int lptim_sample(int argc, char *argv[])
+static int lptim_sample(int argc, char **argv)
 {
     if (argc > 1)
     {

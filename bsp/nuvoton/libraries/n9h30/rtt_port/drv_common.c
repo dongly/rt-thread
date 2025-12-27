@@ -78,7 +78,7 @@ rt_weak void rt_hw_board_init(void)
 }
 
 
-void devmem(int argc, char *argv[])
+static int devmem(int argc, char **argv)
 {
     volatile unsigned int u32Addr;
     unsigned int value = 0, mode = 0;

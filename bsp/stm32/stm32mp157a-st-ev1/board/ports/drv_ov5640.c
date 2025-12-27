@@ -575,7 +575,7 @@ int rt_hw_ov5640_init(void)
 }
 INIT_APP_EXPORT(rt_hw_ov5640_init);
 
-int camera_sample(int argc, char **argv)
+static int camera_sample(int argc, char **argv)
 {
 
     int fd = -1;

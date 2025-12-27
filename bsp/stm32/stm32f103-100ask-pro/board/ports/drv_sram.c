@@ -93,8 +93,10 @@ INIT_BOARD_EXPORT(external_sram_init);
 
 #ifdef DRV_DEBUG
 #ifdef FINSH_USING_MSH
-int external_sram_test(void)
+static int external_sram_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     int i = 0;
     uint32_t start_time = 0, time_cast = 0;
 #if EXTERNAL_SRAM_DATA_WIDTH == 8

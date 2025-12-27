@@ -198,8 +198,10 @@ INIT_DEVICE_EXPORT(drv_lcd_hw_init);
 
 #ifdef DRV_DEBUG
 #ifdef FINSH_USING_MSH
-int lcd_test()
+static int lcd_test(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     struct drv_lcd_device *lcd;
     lcd = (struct drv_lcd_device *)rt_device_find("lcd");
 
@@ -230,6 +232,7 @@ int lcd_test()
         lcd->parent.control(&lcd->parent, RTGRAPHIC_CTRL_RECT_UPDATE, RT_NULL);
         rt_thread_mdelay(1000);
     }
+    return 0;
 }
 MSH_CMD_EXPORT(lcd_test, lcd_test);
 #endif /* FINSH_USING_MSH */

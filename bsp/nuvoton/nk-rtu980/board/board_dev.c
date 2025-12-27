@@ -195,8 +195,10 @@ INIT_COMPONENT_EXPORT(rt_hw_spinand_init);
 
 #define NU_UART_DEVNAME "uart8"
 
-int test_rs485(int argc, char **argv)
+static int test_rs485(int argc, char **argv)
 {
+    RT_UNUSED(argc);
+    RT_UNUSED(argv);
     rt_device_t serial;
     char txbuf[16];
     rt_err_t ret;
