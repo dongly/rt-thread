@@ -33,28 +33,29 @@ This document is based on the RT-Thread mainline repository and categorizes the 
 
 #### 🟢 Renesas
 
-| BSP Name | GPIO | UART | ADC | CAN | CANFD | DAC | Ethernet | HWTimer | I2C | PWM | RTC | SPI | Soft SPI | Flash | SDHI | SCI | SDRAM | LCD | Other |
-|----------|------|------|-----|-----|-------|-----|----------|---------|-----|-----|-----|-----|----------|-------|------|-----|-------|-----|-------|
-| [ebf_qi_min_6m5](renesas/ebf_qi_min_6m5) | ✅ | ✅ | ✅ | - | - | ✅ | - | - | ✅ | ✅ | - | ✅ | - | - | - | ✅ | - | - | - |
-| [ra2a1-ek](renesas/ra2a1-ek) | ✅ | ✅ | ✅ | - | - | ✅ | - | - | ✅ | ✅ | - | ✅ | - | - | - | ✅ | - | - | - |
-| [ra2e2-ek](renesas/ra2e2-ek) | ✅ | ✅ | ✅ | - | - | - | - | - | ✅ | ✅ | - | ✅ | - | - | - | - | - | - | - |
-| [ra2l1-cpk](renesas/ra2l1-cpk) | ✅ | ✅ | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | - | ✅ | - | - | - | ✅ | - | - | ✅ |
-| [ra4e2-eco](renesas/ra4e2-eco) | ✅ | ✅ | - | - | - | - | - | - | ✅ | - | - | ✅ | - | - | - | - | - | - | - |
-| [ra4e2-ek](renesas/ra4e2-ek) | - | ✅ | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
-| [ra4m1-ek](renesas/ra4m1-ek) | ✅ | ✅ | ✅ | ✅ | - | ✅ | - | ✅ | ✅ | ✅ | - | ✅ | - | - | - | - | - | - | - |
-| [ra4m2-eco](renesas/ra4m2-eco) | ✅ | ✅ | - | - | - | - | - | - | - | - | - | ✅ | - | - | - | ✅ | - | - | - |
-| [ra6e2-ek](renesas/ra6e2-ek) | ✅ | ✅ | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
-| [ra6e2-fpb](renesas/ra6e2-fpb) | ✅ | ✅ | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
-| [ra6m3-ek](renesas/ra6m3-ek) | ✅ | ✅ | - | - | - | - | ✅ | ✅ | ✅ | ✅ | - | ✅ | - | - | - | ✅ | - | ✅ | - |
-| [ra6m3-hmi-board](renesas/ra6m3-hmi-board) | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | - | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | - | ✅ | ✅ |
-| [ra6m4-cpk](renesas/ra6m4-cpk) | ✅ | ✅ | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | - | - | ✅ |
-| [ra6m4-iot](renesas/ra6m4-iot) | ✅ | ✅ | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | - | - | - |
-| [ra8d1-ek](renesas/ra8d1-ek) | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | - | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | ✅ | ✅ | ✅ |
-| [ra8d1-vision-board](renesas/ra8d1-vision-board) | ✅ | ✅ | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | ✅ | ✅ | ✅ |
-| [ra8m1-ek](renesas/ra8m1-ek) | ✅ | ✅ | ✅ | - | - | ✅ | - | - | ✅ | ✅ | - | ✅ | - | - | - | ✅ | - | - | ✅ |
-| [rzn2l_etherkit](renesas/rzn2l_etherkit) | ✅ | ✅ | ✅ | - | ✅ | - | ✅ | ✅ | ✅ | ✅ | - | ✅ | - | - | - | ✅ | - | - | ✅ |
-| [rzn2l_rsk](renesas/rzn2l_rsk) | ✅ | ✅ | ✅ | - | ✅ | - | ✅ | ✅ | ✅ | - | - | ✅ | - | - | - | ✅ | - | - | ✅ |
-| [rzt2m_rsk](renesas/rzt2m_rsk) | ✅ | ✅ | ✅ | - | - | - | - | ✅ | ✅ | - | - | ✅ | - | - | - | ✅ | - | - | ✅ |
+| BSP Name | GPIO | UART | ADC | CAN | CANFD | DAC | Ethernet | HWTimer | I2C | PWM | RTC | SPI | Soft SPI | Flash | SDHI | SCI | SDRAM | LCD | **RS485** | Other |
+|----------|------|------|-----|-----|-------|-----|----------|---------|-----|-----|-----|-----|----------|-------|------|-----|-------|-----|-------|-------|
+| [ebf_qi_min_6m5](renesas/ebf_qi_min_6m5) | ✅ | ✅ | ✅ | - | - | ✅ | - | - | ✅ | ✅ | - | ✅ | - | - | - | ✅ | - | - | - | - |
+| [ra2a1-ek](renesas/ra2a1-ek) | ✅ | ✅ | ✅ | - | - | ✅ | - | - | ✅ | ✅ | - | ✅ | - | - | - | ✅ | - | - | - | - |
+| [ra2e2-ek](renesas/ra2e2-ek) | ✅ | ✅ | ✅ | - | - | - | - | - | ✅ | ✅ | - | ✅ | - | - | - | - | - | - | - | - |
+| [ra2l1-cpk](renesas/ra2l1-cpk) | ✅ | ✅ | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | - | ✅ | - | - | - | ✅ | - | - | - | ✅ |
+| [ra4e2-eco](renesas/ra4e2-eco) | ✅ | ✅ | - | - | - | - | - | - | ✅ | - | - | ✅ | - | - | - | - | - | - | - | - |
+| [ra4e2-ek](renesas/ra4e2-ek) | - | ✅ | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
+| [ra4m1-ek](renesas/ra4m1-ek) | ✅ | ✅ | ✅ | ✅ | - | ✅ | - | ✅ | ✅ | ✅ | - | ✅ | - | - | - | - | - | - | - | - |
+| [ra4m2-eco](renesas/ra4m2-eco) | ✅ | ✅ | - | - | - | - | - | - | - | - | - | ✅ | - | - | - | ✅ | - | - | - | - |
+| [ra6e2-ek](renesas/ra6e2-ek) | ✅ | ✅ | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
+| [ra6e2-fpb](renesas/ra6e2-fpb) | ✅ | ✅ | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
+| [ra6m3-ek](renesas/ra6m3-ek) | ✅ | ✅ | - | - | - | - | ✅ | ✅ | ✅ | ✅ | - | ✅ | - | - | - | ✅ | - | ✅ | - | - |
+| [ra6m3-hmi-board](renesas/ra6m3-hmi-board) | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | - | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | - | ✅ | - | ✅ |
+| [ra6m4-cpk](renesas/ra6m4-cpk) | ✅ | ✅ | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | - | - | - | ✅ |
+| [ra6m4-iot](renesas/ra6m4-iot) | ✅ | ✅ | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | - | - | - | - |
+| [ra8d1-ek](renesas/ra8d1-ek) | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | - | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | ✅ | ✅ | - | ✅ |
+| [ra8d1-vision-board](renesas/ra8d1-vision-board) | ✅ | ✅ | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | - | ✅ | - | - | ✅ | ✅ | ✅ | ✅ | - | ✅ |
+| [ra8p1-titan-board](renesas/ra8p1-titan-board) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ |
+| [ra8m1-ek](renesas/ra8m1-ek) | ✅ | ✅ | ✅ | - | - | ✅ | - | - | ✅ | ✅ | - | ✅ | - | - | - | ✅ | - | - | - | ✅ |
+| [rzn2l_etherkit](renesas/rzn2l_etherkit) | ✅ | ✅ | ✅ | - | ✅ | - | ✅ | ✅ | ✅ | ✅ | - | ✅ | - | - | - | ✅ | - | - | - | ✅ |
+| [rzn2l_rsk](renesas/rzn2l_rsk) | ✅ | ✅ | ✅ | - | ✅ | - | ✅ | ✅ | ✅ | - | - | ✅ | - | - | - | ✅ | - | - | - | ✅ |
+| [rzt2m_rsk](renesas/rzt2m_rsk) | ✅ | ✅ | ✅ | - | - | - | - | ✅ | ✅ | - | - | ✅ | - | - | - | ✅ | - | - | - | ✅ |
 
 #### 🟢 STM32
 
@@ -760,9 +761,9 @@ This document is based on the RT-Thread mainline repository and categorizes the 
 
 #### 🟢 K230 (RT-Smart)
 
-| BSP Name | GPIO | UART | I2C | RTC | ADC | PWM | SDIO | HWTimer | WDT | SPI |
-|----------|------|------|-----|-----|-----|-----|------|---------|-----|-----|
-| [k230](k230) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| BSP Name | GPIO | UART | I2C | RTC | ADC | PWM | SDIO | HWTimer | WDT | SPI | GNNE |
+|----------|------|------|-----|-----|-----|-----|------|---------|-----|-----|------|
+| [k230](k230) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 #### 🟢 Xuantie (RT-Smart)
 
